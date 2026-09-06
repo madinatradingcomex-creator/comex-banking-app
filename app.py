@@ -155,6 +155,116 @@ st.markdown("""
         font-weight: 600;
         font-size: 13px;
     }
+    
+    /* ===================================================================== */
+    /* BOTONES DE ALTO CONTRASTE Y VISIBILIDAD (MODO OSCURO)                 */
+    /* ===================================================================== */
+    
+    /* Botón de Carga dentro de los File Uploaders (Upload) */
+    div[data-testid="stFileUploader"] button,
+    button[data-testid="baseButton-secondary"],
+    .stButton > button {
+        background-color: #1E3A8A !important;
+        color: #FFFFFF !important;
+        border: 2px solid #3B82F6 !important;
+        border-radius: 8px !important;
+        font-weight: 700 !important;
+        font-size: 14px !important;
+        padding: 8px 20px !important;
+        box-shadow: 0 0 14px rgba(59, 130, 246, 0.45) !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer !important;
+    }
+    div[data-testid="stFileUploader"] button:hover,
+    button[data-testid="baseButton-secondary"]:hover,
+    .stButton > button:hover {
+        background-color: #2563EB !important;
+        border-color: #93C5FD !important;
+        box-shadow: 0 0 22px rgba(96, 165, 250, 0.8) !important;
+        transform: translateY(-1px) !important;
+    }
+    
+    /* Botón de Descarga del Dictamen en PDF */
+    div[data-testid="stDownloadButton"] > button,
+    button[data-testid="baseButton-primary"] {
+        background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%) !important;
+        color: #FFFFFF !important;
+        border: 2px solid #60A5FA !important;
+        border-radius: 10px !important;
+        font-weight: 800 !important;
+        font-size: 16px !important;
+        padding: 14px 28px !important;
+        box-shadow: 0 4px 20px rgba(37, 99, 235, 0.6) !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer !important;
+    }
+    div[data-testid="stDownloadButton"] > button:hover,
+    button[data-testid="baseButton-primary"]:hover {
+        background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%) !important;
+        border-color: #BFDBFE !important;
+        box-shadow: 0 6px 28px rgba(59, 130, 246, 0.9) !important;
+        transform: translateY(-2px) !important;
+    }
+    
+    /* Zona de arrastre de archivos (Dropzone) */
+    div[data-testid="stFileUploaderDropzone"] {
+        background-color: #0F172A !important;
+        border: 2px dashed #3B82F6 !important;
+        border-radius: 10px !important;
+        padding: 14px !important;
+    }
+    div[data-testid="stFileUploaderDropzone"]:hover {
+        background-color: #132142 !important;
+        border-color: #60A5FA !important;
+    }
+    div[data-testid="stFileUploaderDropzone"] span {
+        color: #CBD5E1 !important;
+    }
+    
+    /* ===================================================================== */
+    /* DESPLEGABLES (SELECTBOX): TEXTO COMPLETO, SIN RECORTAR Y LEGIBLE       */
+    /* ===================================================================== */
+    div[data-baseweb="select"] {
+        border: 1.5px solid #334155 !important;
+        border-radius: 8px !important;
+        background-color: #0F172A !important;
+    }
+    div[data-baseweb="select"]:hover,
+    div[data-baseweb="select"]:focus-within {
+        border-color: #3B82F6 !important;
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.4) !important;
+    }
+    div[data-baseweb="select"] * {
+        color: #F8FAFC !important;
+    }
+    div[data-baseweb="popover"] {
+        border: 1.5px solid #3B82F6 !important;
+        border-radius: 10px !important;
+        background-color: #0B1325 !important;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.85) !important;
+        max-width: 95vw !important;
+    }
+    div[data-baseweb="popover"] ul {
+        background-color: #0B1325 !important;
+        padding: 6px !important;
+        white-space: normal !important;
+    }
+    div[data-baseweb="popover"] li {
+        background-color: #0B1325 !important;
+        color: #F8FAFC !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+        line-height: 1.4 !important;
+        padding: 12px 14px !important;
+        border-radius: 6px !important;
+        margin-bottom: 4px !important;
+        border-bottom: 1px solid #1E293B !important;
+    }
+    div[data-baseweb="popover"] li:hover,
+    div[data-baseweb="popover"] li[aria-selected="true"] {
+        background-color: #1E3A8A !important;
+        color: #FFFFFF !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -237,14 +347,20 @@ if "Exportaciones" in operacion_seleccionada:
                 
         if not es_anticipo:
             st.markdown("---")
-            st.markdown("**Posición Arancelaria y Plazo Legal (BCRA):**")
+            NCM_LABELS = {
+                "MANUFACTURAS_MOI_PYME": "🏭 Manufacturas Industriales / PyME (365 días)",
+                "ECONOMIAS_REGIONALES": "🥩 Economías Regionales y Alimentos (180 días)",
+                "GRANOS_COMMODITIES": "🌾 Granos, Cereales y Oleaginosas (15 días)",
+                "EMPRESAS_VINCULADAS": "🔗 Operaciones entre Vinculadas (60 días)"
+            }
             cat_ncm = st.selectbox(
                 "Rubro / Clasificación NCM de la mercadería exportada:",
-                list(CATEGORIAS_NCM_EXPO.keys()),
-                format_func=lambda k: f"{CATEGORIAS_NCM_EXPO[k]['nombre']} ({CATEGORIAS_NCM_EXPO[k]['plazo_dias']} días)",
-                index=1
+                list(NCM_LABELS.keys()),
+                format_func=lambda k: NCM_LABELS[k],
+                index=0
             )
-            vinculada = st.checkbox("¿La venta se realiza a una empresa vinculada en el exterior?", value=False)
+            st.caption(f"ℹ️ **Normativa BCRA:** {CATEGORIAS_NCM_EXPO[cat_ncm]['nombre']} — {CATEGORIAS_NCM_EXPO[cat_ncm]['descripcion']}")
+            vinculada = st.checkbox("¿La venta se realiza a una empresa vinculada en el exterior?", value=(cat_ncm == "EMPRESAS_VINCULADAS"))
             
         st.markdown("---")
         st.markdown('<div class="section-title">📂 2. Carga de Documentación Probatoria (Legajo Digital)</div>', unsafe_allow_html=True)
