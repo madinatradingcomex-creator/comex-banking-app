@@ -97,7 +97,8 @@ def generate_prorroga_sepaimpo_pdf(company_name, cuit, bank_name, op_number, amo
         f"A tal efecto, adjuntamos como constancia documental copia del Conocimiento de Embarque / Documento de Transporte Internacional N° {bl_number} ('Shipped on Board'), acreditando que la mercaderia se encuentra en transito con destino final a la Republica Argentina.",
         "Declaramos bajo juramento que los fondos transferidos se encuentran efectivamente afectados a la importacion de los bienes consignados y solicitamos la actualizacion correspondiente en el sistema SEPAIMPO del BCRA para evitar observaciones registrales."
     ]
-    return build_pdf_document("PRORROGA SEPAIMPO", ref, paragraphs, company_name, cuit, bank_name, signer_name, signer_role)
+    data, _ = build_pdf_document("PRORROGA SEPAIMPO", ref, paragraphs, company_name, cuit, bank_name, signer_name, signer_role)
+    return data
 
 def generate_descargo_mermas_pdf(company_name, cuit, bank_name, pe_number, original_fob, amount_received, nc_number, survey_number, signer_name, signer_role):
     diff = original_fob - amount_received
@@ -109,7 +110,8 @@ def generate_descargo_mermas_pdf(company_name, cuit, bank_name, pe_number, origi
         f"1. Nota de Credito Comercial 'E' N° {nc_number} emitida a traves de ARCA.\n2. Certificado de Peritaje / Survey Report en puerto de destino N° {survey_number}.\n3. Correspondencia comercial probatoria del reclamo de calidad/merma.",
         "Solicitamos a esa entidad bancaria tenga a bien registrar la afectacion del ajuste sobre el valor FOB y dar por cumplida la obligacion de liquidacion de divisas en el sistema del BCRA."
     ]
-    return build_pdf_document("DESCARGO MERMAS SECOEXPO", ref, paragraphs, company_name, cuit, bank_name, signer_name, signer_role)
+    data, _ = build_pdf_document("DESCARGO MERMAS SECOEXPO", ref, paragraphs, company_name, cuit, bank_name, signer_name, signer_role)
+    return data
 
 def generate_zona_primaria_pdf(company_name, cuit, bank_name, pe_number, buyer_name, local_invoice, signer_name, signer_role):
     ref = f"SECOEXPO - Solicitud de Desafectacion por Venta en Zona Primaria Aduanera | PE N° {pe_number}"
@@ -120,7 +122,8 @@ def generate_zona_primaria_pdf(company_name, cuit, bank_name, pe_number, buyer_n
         f"Acompanamos a la presente:\n1. Copia del Contrato de Cesion de Derechos Aduaneros con certificacion de firmas.\n2. Factura comercial local N° {local_invoice}.\n3. Constancia de rectificacion / anulacion aduanera en el Sistema Informatico Malvina (SIM).",
         "Por todo lo expuesto, solicitamos se registre la desafectacion de la obligacion de ingreso de divisas y el cierre del mencionado Permiso de Embarque en el sistema SECOEXPO del BCRA."
     ]
-    return build_pdf_document("VENTA ZONA PRIMARIA", ref, paragraphs, company_name, cuit, bank_name, signer_name, signer_role)
+    data, _ = build_pdf_document("VENTA ZONA PRIMARIA", ref, paragraphs, company_name, cuit, bank_name, signer_name, signer_role)
+    return data
 
 def generate_imputacion_b02_pdf(company_name, cuit, bank_name, pe_number, b02_boleto, amount_usd, signer_name, signer_role):
     ref = f"SECOEXPO - Instruccion de Afectacion de Permiso de Embarque a Boleto de Anticipo B02 | PE N° {pe_number}"
@@ -130,4 +133,54 @@ def generate_imputacion_b02_pdf(company_name, cuit, bank_name, pe_number, b02_bo
         "Adjuntamos al presente pedido copia del Permiso de Embarque cumplido en el SIM, Factura Comercial 'E' y Documento de Transporte Internacional.",
         "Solicitamos se asiente la imputacion en el sistema SECOEXPO del BCRA para cancelar el saldo pendiente a la fecha."
     ]
-    return build_pdf_document("IMPUTACION B02", ref, paragraphs, company_name, cuit, bank_name, signer_name, signer_role)
+    data, _ = build_pdf_document("IMPUTACION B02", ref, paragraphs, company_name, cuit, bank_name, signer_name, signer_role)
+    return data
+
+
+def generate_dictamen_tecnico_pdf(company_name, cuit, operation_type, diagnosis_data, signer_name="Consultor Responsable", signer_role="Asesor Normativo Comex"):
+    """
+    Genera el Dictamen Técnico de Encuadre Normativo y Viabilidad Cambiaria en PDF
+    para entregar al cliente o presentar ante la mesa de Comex del banco.
+    """
+    ref = f"DICTAMEN TÉCNICO DE ENCUADRE NORMATIVO Y FACTIBILIDAD CAMBIARIA ({operation_type.upper()})"
+    
+    monto_val = diagnosis_data.get("monto_usd", 0.0)
+    concepto_txt = diagnosis_data.get("nombre_concepto", "N/A")
+    fundamento = diagnosis_data.get("fundamento_normativo", "")
+    semaforo = diagnosis_data.get("semaforo", {})
+    estado_sem = f"{semaforo.get('color', '')} {semaforo.get('estado', '')}"
+    
+    paragraphs = [
+        f"EMPRESA TITULAR: {company_name} | CUIT: {cuit}\nTIPO DE OPERACION EVALUADA: {operation_type.upper()} | MONTO: USD {monto_val:,.2f}",
+        f"1. ENCUADRE CAMBIARIO DICTAMINADO (BCRA):\nConcepto Oficial Aplicable: {concepto_txt}\n\nFundamentacion Normativa:\n{fundamento}",
+        f"2. EVALUACION DE VIABILIDAD Y CANDADOS REGULATORIOS:\nDictamen de Factibilidad: {estado_sem}"
+    ]
+    
+    bloqueos = diagnosis_data.get("bloqueos", [])
+    if bloqueos:
+        txt_b = "BLOQUEOS NORMATIVOS DETECTADOS:\n"
+        for b in bloqueos:
+            txt_b += f"- [{b.get('origen', 'Normativa')}]: {b.get('detalle', '')}\n"
+        paragraphs.append(txt_b)
+        
+    observaciones = diagnosis_data.get("observaciones", [])
+    if observaciones:
+        txt_o = "OBSERVACIONES Y RECOMENDACIONES DE ENCUADRE:\n"
+        for o in observaciones:
+            txt_o += f"- [{o.get('origen', 'Normativa')}]: {o.get('detalle', '')}\n"
+        paragraphs.append(txt_o)
+        
+    checklist = diagnosis_data.get("checklist_documental", [])
+    if checklist:
+        txt_c = "3. CHECKLIST DOCUMENTAL EXIGIBLE POR LA ENTIDAD BANCARIA:\n"
+        for idx, doc in enumerate(checklist, 1):
+            txt_c += f"{idx}. {doc}\n"
+        paragraphs.append(txt_c)
+        
+    paragraphs.append(
+        "CONCLUSION:\nEl presente informe técnico constituye una orientación profesional basada en el Texto Ordenado de Exterior y Cambios del BCRA y resoluciones complementarias de ARCA a la fecha de emisión. Se recomienda archivar este dictamen junto al legajo de la operación para cualquier auditoría posterior."
+    )
+    
+    data, _ = build_pdf_document("DICTAMEN TECNICO COMEX", ref, paragraphs, company_name, cuit, "MESA DE COMERCIO EXTERIOR / LEGAJO INTERNO", signer_name, signer_role)
+    return data
+
