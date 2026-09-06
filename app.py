@@ -18,79 +18,79 @@ from engine.doc_generator import generate_dictamen_tecnico_pdf
 
 # Configuración de página
 st.set_page_config(
-    page_title="COMEX ADVISORY | Consultoría Cambiaria BCRA & ARCA",
+    page_title="Consultoría Bancaria y Cambiaria | BCRA & ARCA",
     page_icon="⚖️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Estilos CSS de Alta Gama: Comercio Exterior & Seriedad Normativa
+# Estilos CSS de Alta Gama - Tema Oscuro Profesional
 st.markdown("""
 <style>
-    /* Fondo y paleta global */
+    /* Fondo oscuro global y tipografía */
     .stApp {
-        background-color: #F8FAFC;
+        background-color: #070D18;
+        color: #F8FAFC;
     }
     
-    /* Encabezados y títulos */
-    .portal-header {
-        background: linear-gradient(135deg, #0A192F 0%, #1E3A8A 100%);
-        color: #FFFFFF;
-        padding: 22px 28px;
-        border-radius: 12px;
-        margin-bottom: 24px;
-        box-shadow: 0 4px 12px rgba(10, 25, 47, 0.15);
-    }
-    .portal-title {
-        font-size: 24px;
+    /* Titular Principal Superior */
+    .header-main-title {
+        font-size: 34px;
         font-weight: 800;
         color: #FFFFFF;
-        margin: 0;
         letter-spacing: -0.5px;
+        margin-top: 0px;
+        margin-bottom: 4px;
     }
-    .portal-subtitle {
+    .header-subtitle {
+        font-size: 14px;
+        color: #94A3B8;
+        margin-bottom: 24px;
+    }
+    
+    /* Banner de Operación Activa */
+    .operation-banner {
+        background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+        border: 1px solid #334155;
+        border-left: 5px solid #3B82F6;
+        padding: 16px 20px;
+        border-radius: 10px;
+        margin-bottom: 24px;
+    }
+    .operation-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #F8FAFC;
+        margin: 0;
+    }
+    .operation-desc {
         font-size: 13px;
-        color: #93C5FD;
-        margin-top: 6px;
-        font-weight: 400;
+        color: #94A3B8;
+        margin-top: 4px;
     }
     
-    /* Tarjetas de Trabajo */
-    .card-workspace {
-        background-color: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-top: 4px solid #1E40AF;
+    /* Tarjetas de Trabajo en Modo Oscuro */
+    .dark-card {
+        background-color: #0F172A;
+        border: 1px solid #1E293B;
         border-radius: 12px;
-        padding: 24px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        padding: 22px;
         margin-bottom: 20px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
     }
     
-    .card-dictamen {
-        background-color: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-top: 4px solid #0D9488;
-        border-radius: 12px;
-        padding: 24px;
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
-        margin-bottom: 20px;
-    }
-    
-    .card-section-title {
+    .section-title {
         font-size: 16px;
         font-weight: 700;
-        color: #0F172A;
+        color: #F1F5F9;
         margin-bottom: 14px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
     }
     
-    /* Badges de Estado */
+    /* Badges de Semáforo en Modo Oscuro */
     .badge-viable {
-        background-color: #ECFDF5;
-        color: #065F46;
-        border: 1px solid #A7F3D0;
+        background-color: #064E3B;
+        color: #A7F3D0;
+        border: 1px solid #059669;
         padding: 8px 16px;
         border-radius: 8px;
         font-weight: 700;
@@ -98,9 +98,9 @@ st.markdown("""
         display: inline-block;
     }
     .badge-observado {
-        background-color: #FFFBEB;
-        color: #92400E;
-        border: 1px solid #FDE68A;
+        background-color: #451A03;
+        color: #FDE68A;
+        border: 1px solid #D97706;
         padding: 8px 16px;
         border-radius: 8px;
         font-weight: 700;
@@ -108,9 +108,9 @@ st.markdown("""
         display: inline-block;
     }
     .badge-bloqueado {
-        background-color: #FEF2F2;
-        color: #991B1B;
-        border: 1px solid #FECACA;
+        background-color: #450A0A;
+        color: #FECACA;
+        border: 1px solid #DC2626;
         padding: 8px 16px;
         border-radius: 8px;
         font-weight: 700;
@@ -118,65 +118,54 @@ st.markdown("""
         display: inline-block;
     }
     
-    /* Concepto y Documentación */
-    .concept-tag {
-        background-color: #EFF6FF;
-        color: #1E40AF;
-        border: 1px solid #BFDBFE;
-        padding: 8px 14px;
+    /* Tag de Concepto Dictaminado */
+    .concept-tag-dark {
+        background-color: #172554;
+        color: #93C5FD;
+        border: 1px solid #1D4ED8;
+        padding: 10px 16px;
         border-radius: 8px;
         font-weight: 700;
         font-size: 15px;
-        margin: 12px 0;
+        margin: 14px 0;
         display: block;
     }
     
-    .doc-ledger-box {
-        background-color: #F8FAFC;
-        border: 1px solid #E2E8F0;
-        border-radius: 8px;
-        padding: 14px;
-        margin-top: 14px;
-    }
-    
-    .doc-status-ok {
-        color: #059669;
-        font-weight: 600;
-        font-size: 13px;
-    }
-    .doc-status-pending {
-        color: #D97706;
-        font-weight: 600;
-        font-size: 13px;
-    }
-    
-    /* Alerta antisumario */
-    .alert-antisumario {
-        background-color: #FFF1F2;
-        border-left: 5px solid #E11D48;
+    /* Alerta Antisumario */
+    .alert-antisumario-dark {
+        background-color: #3B0712;
+        border: 1px solid #9F1239;
+        border-left: 5px solid #F43F5E;
         padding: 14px 18px;
-        border-radius: 6px;
+        border-radius: 8px;
         margin: 14px 0;
-        color: #881337;
+        color: #FFE4E6;
         font-size: 13.5px;
         line-height: 1.5;
+    }
+    
+    /* Textos de Estado de Documentos */
+    .doc-ok {
+        color: #34D399;
+        font-weight: 600;
+        font-size: 13px;
+    }
+    .doc-pending {
+        color: #FBBF24;
+        font-weight: 600;
+        font-size: 13px;
     }
 </style>
 """, unsafe_allow_html=True)
 
 
 # ==============================================================================
-# 🏛️ PANEL LATERAL IZQUIERDO: SELECCIÓN DE OPERACIÓN Y DATOS DEL LEGAJO
+# 🏛️ PANEL LATERAL IZQUIERDO: ÚNICAMENTE SELECCIÓN DE OPERACIÓN
 # ==============================================================================
 with st.sidebar:
-    st.image("https://img.icons8.com/fluency/96/bank-building.png", width=54)
-    st.markdown("### **COMEX ADVISORY**")
-    st.caption("Consultoría Bancaria y Cambiaria (BCRA & ARCA)")
-    st.divider()
-    
-    st.markdown("#### **OPERACIÓN A REALIZAR:**")
+    st.markdown("### **OPERACIÓN A REALIZAR**")
     operacion_seleccionada = st.radio(
-        "Seleccioná la operación a analizar:",
+        "Seleccioná la operación a gestionar:",
         [
             "🚢 Exportaciones",
             "📦 Importaciones"
@@ -184,30 +173,25 @@ with st.sidebar:
         index=0,
         label_visibility="collapsed"
     )
-    
     st.divider()
-    with st.expander("👤 **Perfil del Cliente / Empresa**", expanded=True):
-        empresa_nombre = st.text_input("Razón Social:", value="Empresa Demo S.A.", key="cfg_empresa")
-        empresa_cuit = st.text_input("CUIT:", value="30-71234567-8", key="cfg_cuit")
-        empresa_firmante = st.text_input("Firmante / Apoderado:", value="Juan Pérez", key="cfg_firmante")
-        
-    with st.expander("⚖️ **Asesor Responsable del Dictamen**", expanded=False):
-        consultor_nombre = st.text_input("Nombre del Asesor:", value="Lic. Asesor Comex", key="cfg_consultor")
-        consultor_cargo = st.text_input("Especialidad:", value="Consultor Normativo en Exterior y Cambios", key="cfg_cargo")
-        
-    st.divider()
-    st.caption("🔒 Plataforma institucional para auditoría documental y prevención de sumarios penales cambiarios.")
+    st.caption("Normativa Cambiaria BCRA & ARCA")
 
 
 # ==============================================================================
-# 🚢 MÓDULO 1: EXPORTACIONES (OPERACIÓN PREDETERMINADA)
+# 🏛️ TITULAR SUPERIOR PRINCIPAL
+# ==============================================================================
+st.markdown('<div class="header-main-title">Consultoría Bancaria y Cambiaria</div>', unsafe_allow_html=True)
+st.markdown('<div class="header-subtitle">Régimen Informativo y Encuadre Normativo de Operaciones de Comercio Exterior (BCRA / ARCA)</div>', unsafe_allow_html=True)
+
+
+# ==============================================================================
+# 🚢 MÓDULO: EXPORTACIONES
 # ==============================================================================
 if "Exportaciones" in operacion_seleccionada:
-    # Encabezado Ejecutivo
     st.markdown("""
-    <div class="portal-header">
-        <div class="portal-title">🚢 Mesa de Exportaciones | Análisis Técnico & Auditoría Documental</div>
-        <div class="portal-subtitle">Encuadre normativo de cobros (B01 vs B02), plazos de liquidación según NCM y verificación de legajo probatorio ante entidades bancarias.</div>
+    <div class="operation-banner">
+        <div class="operation-title">🚢 Mesa de Exportaciones | Análisis Técnico & Auditoría Documental</div>
+        <div class="operation-desc">Encuadre legal de cobros (B01 vs B02), plazos de liquidación según NCM y verificación de legajo probatorio ante entidades bancarias.</div>
     </div>
     """, unsafe_allow_html=True)
     
@@ -217,7 +201,7 @@ if "Exportaciones" in operacion_seleccionada:
     # COLUMNA IZQUIERDA: RELEVAMIENTO OPERATIVO Y CARGA DE DOCUMENTOS
     # --------------------------------------------------------------------------
     with col_relev:
-        st.markdown('<div class="card-section-title">📝 1. Relevamiento de la Operación de Exportación</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">📝 1. Relevamiento de la Operación de Exportación</div>', unsafe_allow_html=True)
         
         momento_fondos_label = st.radio(
             "¿En qué momento ingresan o se liquidan las divisas del exterior?",
@@ -263,8 +247,8 @@ if "Exportaciones" in operacion_seleccionada:
             vinculada = st.checkbox("¿La venta se realiza a una empresa vinculada en el exterior?", value=False)
             
         st.markdown("---")
-        st.markdown('<div class="card-section-title">📂 2. Carga de Documentación Probatoria (Legajo Digital)</div>', unsafe_allow_html=True)
-        st.caption("Cargá los archivos digitalizados correspondientes a cada campo para auditar la solidez del legajo ante el banco:")
+        st.markdown('<div class="section-title">📂 2. Carga de Documentación Probatoria (Legajo Digital)</div>', unsafe_allow_html=True)
+        st.caption("Cargá los archivos digitalizados correspondientes a cada campo para auditar la solidez del legajo:")
         
         archivos_adjuntos = []
         
@@ -274,7 +258,7 @@ if "Exportaciones" in operacion_seleccionada:
             with c_pe_txt:
                 pe_num = st.text_input("N° Permiso de Embarque (SIM):", value="26001EC01004567A")
             with c_pe_file:
-                pe_upload = st.file_uploader("📎 Adjuntar Permiso SIM cumplido (.pdf/.jpg):", type=["pdf", "jpg", "png"], key="up_pe")
+                pe_upload = st.file_uploader("📎 Adjuntar Permiso SIM (.pdf/.jpg):", type=["pdf", "jpg", "png"], key="up_pe")
                 archivos_adjuntos.append({
                     "name": f"Permiso de Embarque SIM N° {pe_num}",
                     "attached": pe_upload is not None,
@@ -286,7 +270,7 @@ if "Exportaciones" in operacion_seleccionada:
             with c_fac_txt:
                 fac_num = st.text_input("N° Factura Electrónica 'E':", value="00001-00000456")
             with c_fac_file:
-                fac_upload = st.file_uploader("📎 Adjuntar Factura 'E' emitida (.pdf):", type=["pdf"], key="up_fac")
+                fac_upload = st.file_uploader("📎 Adjuntar Factura 'E' (.pdf):", type=["pdf"], key="up_fac")
                 archivos_adjuntos.append({
                     "name": f"Factura Electrónica 'E' N° {fac_num}",
                     "attached": fac_upload is not None,
@@ -298,7 +282,7 @@ if "Exportaciones" in operacion_seleccionada:
             with c_bl_txt:
                 bl_num = st.text_input("Doc. Transporte (B/L, CRT o AWB):", value="BL-MEDU-9876543")
             with c_bl_file:
-                bl_upload = st.file_uploader("📎 Adjuntar Documento de Transporte (.pdf):", type=["pdf"], key="up_bl")
+                bl_upload = st.file_uploader("📎 Adjuntar Doc. Transporte (.pdf):", type=["pdf"], key="up_bl")
                 archivos_adjuntos.append({
                     "name": f"Conocimiento de Transporte {bl_num}",
                     "attached": bl_upload is not None,
@@ -310,7 +294,7 @@ if "Exportaciones" in operacion_seleccionada:
             with c_prof_txt:
                 prof_num = st.text_input("N° Proforma u Orden de Compra:", value="PI-2026-EXPO-098")
             with c_prof_file:
-                prof_upload = st.file_uploader("📎 Adjuntar Factura Proforma / PO (.pdf):", type=["pdf"], key="up_prof")
+                prof_upload = st.file_uploader("📎 Adjuntar Factura Proforma (.pdf):", type=["pdf"], key="up_prof")
                 archivos_adjuntos.append({
                     "name": f"Factura Proforma N° {prof_num}",
                     "attached": prof_upload is not None,
@@ -322,7 +306,7 @@ if "Exportaciones" in operacion_seleccionada:
             with c_cont_txt:
                 cont_num = st.text_input("Referencia Contrato / Pedido:", value="PO-BUYER-USA-441")
             with c_cont_file:
-                cont_upload = st.file_uploader("📎 Adjuntar Contrato Comercial / Orden (.pdf):", type=["pdf"], key="up_cont")
+                cont_upload = st.file_uploader("📎 Adjuntar Contrato / Pedido (.pdf):", type=["pdf"], key="up_cont")
                 archivos_adjuntos.append({
                     "name": f"Contrato Comercial {cont_num}",
                     "attached": cont_upload is not None,
@@ -333,7 +317,7 @@ if "Exportaciones" in operacion_seleccionada:
     # COLUMNA DERECHA: DICTAMEN TÉCNICO Y AUDITORÍA EN TIEMPO REAL
     # --------------------------------------------------------------------------
     with col_dictamen:
-        st.markdown('<div class="card-section-title">⚖️ 3. Dictamen Técnico y Orientación Normativa</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">⚖️ 3. Dictamen Técnico y Orientación Normativa</div>', unsafe_allow_html=True)
         
         diag_expo = diagnose_export_operation(
             momento_fondos=momento_fondos,
@@ -354,21 +338,21 @@ if "Exportaciones" in operacion_seleccionada:
             badge_html = f'<div class="badge-viable">🟢 {sem_exp.get("estado", "")}</div>'
             
         st.markdown(f"""
-        <div class="card-dictamen">
+        <div class="dark-card">
             <div style="margin-bottom: 12px;">{badge_html}</div>
-            <div style="font-size: 14px; color: #1E293B; line-height: 1.5; margin-bottom: 14px;">
+            <div style="font-size: 14px; color: #CBD5E1; line-height: 1.5; margin-bottom: 14px;">
                 {sem_exp.get("resumen", sem_exp.get("accion", ""))}
             </div>
-            <div class="concept-tag">📌 Concepto Oficial Dictaminado: {diag_expo["nombre_concepto"]}</div>
+            <div class="concept-tag-dark">📌 Concepto Oficial Dictaminado: {diag_expo["nombre_concepto"]}</div>
         </div>
         """, unsafe_allow_html=True)
         
         # Alerta antisumario si intentaban usar B01 antes de embarcar
         if es_anticipo and cod_expo_limpio == "B01":
             st.markdown("""
-            <div class="alert-antisumario">
+            <div class="alert-antisumario-dark">
                 <strong>🚨 ERROR CRÍTICO EVITADO: Intento de uso de Concepto B01</strong><br>
-                El cliente o banco sugirió liquidar bajo <strong>B01</strong>. Sin embargo, conforme normativa del BCRA, el código B01 exige indefectiblemente un <strong>Permiso de Embarque ya oficializado y cumplido en Aduana</strong>. Liquidar un anticipo como B01 genera rechazo inmediato en la mesa de Comex o la apertura de un reclamo en SECOEXPO. <strong>El encuadre obligado por ley es B02.</strong>
+                El cliente o banco sugirió liquidar bajo <strong>B01</strong>. Sin embargo, conforme la normativa del BCRA, el código B01 exige indefectiblemente un <strong>Permiso de Embarque ya oficializado y cumplido en Aduana</strong>. Liquidar un anticipo como B01 genera rechazo inmediato en la mesa de Comex o la apertura de un reclamo en SECOEXPO. <strong>El encuadre legal obligado es B02.</strong>
             </div>
             """, unsafe_allow_html=True)
             
@@ -394,9 +378,9 @@ if "Exportaciones" in operacion_seleccionada:
         
         for item in archivos_adjuntos:
             if item["attached"]:
-                st.markdown(f"✅ <span class='doc-status-ok'>{item['name']}:</span> Archivo adjunto (`{item['filename']}`)", unsafe_allow_html=True)
+                st.markdown(f"✅ <span class='doc-ok'>{item['name']}:</span> Archivo adjunto (`{item['filename']}`)", unsafe_allow_html=True)
             else:
-                st.markdown(f"⏳ <span class='doc-status-pending'>{item['name']}:</span> Pendiente de carga", unsafe_allow_html=True)
+                st.markdown(f"⏳ <span class='doc-pending'>{item['name']}:</span> Pendiente de carga", unsafe_allow_html=True)
                 
         # Fundamento Normativo
         with st.expander("📖 **Fundamento Normativo BCRA & Obligaciones en SECOEXPO**", expanded=True):
@@ -405,39 +389,39 @@ if "Exportaciones" in operacion_seleccionada:
         # Botón de Descarga de Dictamen en PDF
         st.divider()
         pdf_bytes_exp = generate_dictamen_tecnico_pdf(
-            company_name=empresa_nombre,
-            cuit=empresa_cuit,
+            company_name="Empresa Titular",
+            cuit="CUIT Operativo",
             operation_type="EXPORTACIÓN DE BIENES",
             diagnosis_data=diag_expo,
-            signer_name=consultor_nombre,
-            signer_role=consultor_cargo,
+            signer_name="Consultor Responsable",
+            signer_role="Asesor Normativo Comex",
             attached_files=archivos_adjuntos
         )
         
         st.download_button(
-            label="📥 Descargar Dictamen Técnico de Exportación (PDF Membretado)",
+            label="📥 Descargar Dictamen Técnico de Exportación (PDF)",
             data=pdf_bytes_exp,
-            file_name=f"Dictamen_Expo_{empresa_cuit.replace('-', '')}_{datetime.now().strftime('%Y%m%d')}.pdf",
+            file_name=f"Dictamen_Expo_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
             mime="application/pdf",
             use_container_width=True
         )
 
 
 # ==============================================================================
-# 📦 MÓDULO 2: IMPORTACIONES
+# 📦 MÓDULO: IMPORTACIONES
 # ==============================================================================
 else:
     st.markdown("""
-    <div class="portal-header">
-        <div class="portal-title">📦 Mesa de Importaciones | Encuadre Normativo & Acceso al MLC</div>
-        <div class="portal-subtitle">Evaluación de giros al exterior (B05 / B07 / B06 / B12), candados bursátiles (Empresa + Socios) y validaciones cruzadas ARCA.</div>
+    <div class="operation-banner">
+        <div class="operation-title">📦 Mesa de Importaciones | Encuadre Normativo & Acceso al MLC</div>
+        <div class="operation-desc">Evaluación de transferencias al exterior (B05 / B07 / B06 / B12), candados bursátiles (Empresa + Socios) y validaciones cruzadas ARCA.</div>
     </div>
     """, unsafe_allow_html=True)
     
     col_relev_im, col_dictamen_im = st.columns([1.15, 1.25], gap="large")
     
     with col_relev_im:
-        st.markdown('<div class="card-section-title">📝 1. Relevamiento Operativo y Estado de Mercadería</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">📝 1. Relevamiento Operativo y Estado de Mercadería</div>', unsafe_allow_html=True)
         
         estado_label = st.radio(
             "Estado físico de la mercadería importada:",
@@ -475,7 +459,7 @@ else:
             fecha_giro_impo = st.date_input("Fecha estimada de giro:", value=date.today(), key="f_impo")
             
         st.markdown("---")
-        st.markdown('<div class="card-section-title">📂 2. Carga de Documentación de Importación</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">📂 2. Carga de Documentación de Importación</div>', unsafe_allow_html=True)
         
         archivos_impo = []
         
@@ -484,7 +468,7 @@ else:
         with c_fac_im:
             num_fac_im = st.text_input("N° Factura Exterior:", value="INV-EXT-2026-99")
         with c_fac_up:
-            up_fac_im = st.file_uploader("📎 Factura Comercial / Proforma (.pdf):", type=["pdf"], key="up_fac_im")
+            up_fac_im = st.file_uploader("📎 Factura Exterior (.pdf):", type=["pdf"], key="up_fac_im")
             archivos_impo.append({"name": f"Factura Exterior {num_fac_im}", "attached": up_fac_im is not None, "filename": up_fac_im.name if up_fac_im else None})
             
         # Doc de Transporte o Despacho
@@ -513,7 +497,7 @@ else:
             archivos_impo.append({"name": f"Constancia SEDI {num_sedi}", "attached": up_sedi is not None, "filename": up_sedi.name if up_sedi else None})
             
         st.markdown("---")
-        st.markdown('<div class="card-section-title">🔒 3. Auditoría de Candados Cruzados (BCRA + ARCA)</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">🔒 3. Auditoría de Candados Cruzados (BCRA + ARCA)</div>', unsafe_allow_html=True)
         
         empresa_mep = st.checkbox(
             "La EMPRESA operó títulos valores (MEP / CCL / CEDEARs) en los últimos 90 o 180 días",
@@ -543,7 +527,7 @@ else:
             )
 
     with col_dictamen_im:
-        st.markdown('<div class="card-section-title">⚖️ 4. Dictamen Técnico y Viabilidad Cambiaria</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">⚖️ 4. Dictamen Técnico y Viabilidad Cambiaria</div>', unsafe_allow_html=True)
         
         diag_impo = diagnose_import_operation(
             estado_mercaderia=estado_impo,
@@ -568,12 +552,12 @@ else:
             badge_html_im = f'<div class="badge-viable">🟢 {sem_im["estado"]}</div>'
             
         st.markdown(f"""
-        <div class="card-dictamen">
+        <div class="dark-card">
             <div style="margin-bottom: 12px;">{badge_html_im}</div>
-            <div style="font-size: 14px; color: #1E293B; line-height: 1.5; margin-bottom: 14px;">
+            <div style="font-size: 14px; color: #CBD5E1; line-height: 1.5; margin-bottom: 14px;">
                 {sem_im["resumen"]}
             </div>
-            <div class="concept-tag">📌 Concepto Oficial Dictaminado: {diag_impo["nombre_concepto"]}</div>
+            <div class="concept-tag-dark">📌 Concepto Oficial Dictaminado: {diag_impo["nombre_concepto"]}</div>
         </div>
         """, unsafe_allow_html=True)
         
@@ -597,9 +581,9 @@ else:
         
         for item in archivos_impo:
             if item["attached"]:
-                st.markdown(f"✅ <span class='doc-status-ok'>{item['name']}:</span> Archivo adjunto (`{item['filename']}`)", unsafe_allow_html=True)
+                st.markdown(f"✅ <span class='doc-ok'>{item['name']}:</span> Archivo adjunto (`{item['filename']}`)", unsafe_allow_html=True)
             else:
-                st.markdown(f"⏳ <span class='doc-status-pending'>{item['name']}:</span> Pendiente de carga", unsafe_allow_html=True)
+                st.markdown(f"⏳ <span class='doc-pending'>{item['name']}:</span> Pendiente de carga", unsafe_allow_html=True)
                 
         with st.expander("📖 **Fundamento Normativo BCRA & Plazo SEPAIMPO**", expanded=True):
             st.write(diag_impo["fundamento_normativo"])
@@ -608,19 +592,19 @@ else:
                 
         st.divider()
         pdf_bytes_im = generate_dictamen_tecnico_pdf(
-            company_name=empresa_nombre,
-            cuit=empresa_cuit,
+            company_name="Empresa Titular",
+            cuit="CUIT Operativo",
             operation_type="IMPORTACIÓN DE BIENES",
             diagnosis_data=diag_impo,
-            signer_name=consultor_nombre,
-            signer_role=consultor_cargo,
+            signer_name="Consultor Responsable",
+            signer_role="Asesor Normativo Comex",
             attached_files=archivos_impo
         )
         
         st.download_button(
-            label="📥 Descargar Dictamen Técnico de Importación (PDF Membretado)",
+            label="📥 Descargar Dictamen Técnico de Importación (PDF)",
             data=pdf_bytes_im,
-            file_name=f"Dictamen_Impo_{empresa_cuit.replace('-', '')}_{datetime.now().strftime('%Y%m%d')}.pdf",
+            file_name=f"Dictamen_Impo_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
             mime="application/pdf",
             use_container_width=True
         )
