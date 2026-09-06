@@ -14,306 +14,225 @@ from engine.rules_engine import (
     diagnose_import_operation,
     diagnose_export_operation
 )
-from engine.sabana_parser import parse_sabana_dataframe, get_demo_secoexpo_data, get_demo_sepaimpo_data
-from engine.doc_generator import (
-    generate_prorroga_sepaimpo_pdf,
-    generate_descargo_mermas_pdf,
-    generate_zona_primaria_pdf,
-    generate_imputacion_b02_pdf,
-    generate_dictamen_tecnico_pdf
-)
+from engine.doc_generator import generate_dictamen_tecnico_pdf
 
 # Configuración de página
 st.set_page_config(
-    page_title="COMEX Consultoría | Dictamen Normativo BCRA & ARCA",
+    page_title="COMEX ADVISORY | Consultoría Cambiaria BCRA & ARCA",
     page_icon="⚖️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Estilos CSS Profesionales
+# Estilos CSS de Alta Gama: Comercio Exterior & Seriedad Normativa
 st.markdown("""
 <style>
-    .main-title {
-        font-size: 26px;
+    /* Fondo y paleta global */
+    .stApp {
+        background-color: #F8FAFC;
+    }
+    
+    /* Encabezados y títulos */
+    .portal-header {
+        background: linear-gradient(135deg, #0A192F 0%, #1E3A8A 100%);
+        color: #FFFFFF;
+        padding: 22px 28px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 12px rgba(10, 25, 47, 0.15);
+    }
+    .portal-title {
+        font-size: 24px;
         font-weight: 800;
-        color: #0F172A;
-        margin-bottom: 2px;
+        color: #FFFFFF;
+        margin: 0;
+        letter-spacing: -0.5px;
     }
-    .subtitle {
-        font-size: 15px;
-        color: #475569;
-        margin-bottom: 20px;
+    .portal-subtitle {
+        font-size: 13px;
+        color: #93C5FD;
+        margin-top: 6px;
+        font-weight: 400;
     }
-    .consulting-card {
+    
+    /* Tarjetas de Trabajo */
+    .card-workspace {
         background-color: #FFFFFF;
         border: 1px solid #E2E8F0;
+        border-top: 4px solid #1E40AF;
         border-radius: 12px;
-        padding: 22px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-        margin-bottom: 16px;
+        padding: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        margin-bottom: 20px;
     }
-    .dictamen-box {
-        background-color: #F8FAFC;
-        border: 2px solid #CBD5E1;
+    
+    .card-dictamen {
+        background-color: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-top: 4px solid #0D9488;
         border-radius: 12px;
-        padding: 22px;
-        margin-bottom: 16px;
+        padding: 24px;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
     }
+    
+    .card-section-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    /* Badges de Estado */
     .badge-viable {
-        background-color: #DCFCE7;
-        color: #15803D;
-        padding: 6px 14px;
+        background-color: #ECFDF5;
+        color: #065F46;
+        border: 1px solid #A7F3D0;
+        padding: 8px 16px;
         border-radius: 8px;
         font-weight: 700;
         font-size: 14px;
         display: inline-block;
     }
     .badge-observado {
-        background-color: #FEF9C3;
-        color: #A16207;
-        padding: 6px 14px;
+        background-color: #FFFBEB;
+        color: #92400E;
+        border: 1px solid #FDE68A;
+        padding: 8px 16px;
         border-radius: 8px;
         font-weight: 700;
         font-size: 14px;
         display: inline-block;
     }
     .badge-bloqueado {
-        background-color: #FEE2E2;
-        color: #B91C1C;
-        padding: 6px 14px;
+        background-color: #FEF2F2;
+        color: #991B1B;
+        border: 1px solid #FECACA;
+        padding: 8px 16px;
         border-radius: 8px;
         font-weight: 700;
         font-size: 14px;
         display: inline-block;
     }
+    
+    /* Concepto y Documentación */
     .concept-tag {
         background-color: #EFF6FF;
-        color: #1D4ED8;
-        padding: 6px 12px;
-        border-radius: 6px;
+        color: #1E40AF;
+        border: 1px solid #BFDBFE;
+        padding: 8px 14px;
+        border-radius: 8px;
         font-weight: 700;
         font-size: 15px;
-        display: inline-block;
-        margin-bottom: 8px;
+        margin: 12px 0;
+        display: block;
+    }
+    
+    .doc-ledger-box {
+        background-color: #F8FAFC;
+        border: 1px solid #E2E8F0;
+        border-radius: 8px;
+        padding: 14px;
+        margin-top: 14px;
+    }
+    
+    .doc-status-ok {
+        color: #059669;
+        font-weight: 600;
+        font-size: 13px;
+    }
+    .doc-status-pending {
+        color: #D97706;
+        font-weight: 600;
+        font-size: 13px;
+    }
+    
+    /* Alerta antisumario */
+    .alert-antisumario {
+        background-color: #FFF1F2;
+        border-left: 5px solid #E11D48;
+        padding: 14px 18px;
+        border-radius: 6px;
+        margin: 14px 0;
+        color: #881337;
+        font-size: 13.5px;
+        line-height: 1.5;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# Encabezado Institucional
-st.markdown('<div class="main-title">🏛️ COMEX Consultoría Bancaria & Cambiaria</div>', unsafe_allow_html=True)
-st.markdown('<div class="subtitle">Plataforma de Diagnóstico, Encuadre Normativo (BCRA) y Validación de Acceso al Mercado (ARCA)</div>', unsafe_allow_html=True)
 
-# Navegación Principal en 3 Pilares Consultivos
-modulo_opciones = [
-    "📋 1. Dictamen de Importaciones (BCRA + ARCA)",
-    "🚢 2. Dictamen de Exportaciones (BCRA)",
-    "📑 3. Auditoría de Sábanas Bancarias (SEPAIMPO / SECOEXPO)"
-]
-
-modulo = st.segmented_control(
-    "Seleccioná el Módulo de Asesoramiento:",
-    options=modulo_opciones,
-    default="📋 1. Dictamen de Importaciones (BCRA + ARCA)"
-)
-if not modulo:
-    modulo = "📋 1. Dictamen de Importaciones (BCRA + ARCA)"
-
-# Barra Lateral: Identificación del Cliente y Consultora
+# ==============================================================================
+# 🏛️ PANEL LATERAL IZQUIERDO: SELECCIÓN DE OPERACIÓN Y DATOS DEL LEGAJO
+# ==============================================================================
 with st.sidebar:
-    st.image("https://img.icons8.com/fluency/96/bank-building.png", width=52)
-    st.markdown("### **Mesa de Consultoría**")
-    st.caption("Régimen Informativo BCRA & ARCA")
+    st.image("https://img.icons8.com/fluency/96/bank-building.png", width=54)
+    st.markdown("### **COMEX ADVISORY**")
+    st.caption("Consultoría Bancaria y Cambiaria (BCRA & ARCA)")
     st.divider()
     
-    st.markdown("**Datos del Cliente Evaluado:**")
-    empresa_nombre = st.text_input("Razón Social:", value="Empresa Demo S.A.", key="cfg_empresa")
-    empresa_cuit = st.text_input("CUIT:", value="30-71234567-8", key="cfg_cuit")
-    empresa_firmante = st.text_input("Contacto / Apoderado:", value="Juan Pérez", key="cfg_firmante")
+    st.markdown("#### **OPERACIÓN A REALIZAR:**")
+    operacion_seleccionada = st.radio(
+        "Seleccioná la operación a analizar:",
+        [
+            "🚢 Exportaciones",
+            "📦 Importaciones"
+        ],
+        index=0,
+        label_visibility="collapsed"
+    )
     
     st.divider()
-    st.markdown("**Datos del Consultor / Asesor:**")
-    consultor_nombre = st.text_input("Nombre del Asesor:", value="Lic. Asesor Comex", key="cfg_consultor")
-    consultor_cargo = st.text_input("Cargo / Especialidad:", value="Consultor en Normativa Cambiaria", key="cfg_cargo_cons")
-    st.info("💡 Completá los datos arriba para que salgan membretados en los Dictámenes en PDF.")
+    with st.expander("👤 **Perfil del Cliente / Empresa**", expanded=True):
+        empresa_nombre = st.text_input("Razón Social:", value="Empresa Demo S.A.", key="cfg_empresa")
+        empresa_cuit = st.text_input("CUIT:", value="30-71234567-8", key="cfg_cuit")
+        empresa_firmante = st.text_input("Firmante / Apoderado:", value="Juan Pérez", key="cfg_firmante")
+        
+    with st.expander("⚖️ **Asesor Responsable del Dictamen**", expanded=False):
+        consultor_nombre = st.text_input("Nombre del Asesor:", value="Lic. Asesor Comex", key="cfg_consultor")
+        consultor_cargo = st.text_input("Especialidad:", value="Consultor Normativo en Exterior y Cambios", key="cfg_cargo")
+        
+    st.divider()
+    st.caption("🔒 Plataforma institucional para auditoría documental y prevención de sumarios penales cambiarios.")
 
 
 # ==============================================================================
-# 📋 1. DICTAMEN DE IMPORTACIONES (BCRA + ARCA)
+# 🚢 MÓDULO 1: EXPORTACIONES (OPERACIÓN PREDETERMINADA)
 # ==============================================================================
-if modulo == "📋 1. Dictamen de Importaciones (BCRA + ARCA)":
-    st.markdown("### 📋 Relevamiento y Dictamen Técnico de Importación")
-    st.caption("Evaluación de encuadre legal cambiario (B05 / B07 / B06 / B12), plazos aduaneros y candados de acceso al MLC.")
+if "Exportaciones" in operacion_seleccionada:
+    # Encabezado Ejecutivo
+    st.markdown("""
+    <div class="portal-header">
+        <div class="portal-title">🚢 Mesa de Exportaciones | Análisis Técnico & Auditoría Documental</div>
+        <div class="portal-subtitle">Encuadre normativo de cobros (B01 vs B02), plazos de liquidación según NCM y verificación de legajo probatorio ante entidades bancarias.</div>
+    </div>
+    """, unsafe_allow_html=True)
     
-    col_input, col_output = st.columns([1.1, 1.3], gap="large")
+    col_relev, col_dictamen = st.columns([1.15, 1.25], gap="large")
     
-    with col_input:
-        st.markdown("#### 1. Relevamiento Operativo y Documental")
-        
-        estado_mercaderia_label = st.radio(
-            "Estado físico de la mercadería y documentación disponible:",
-            [
-                "1. Pre-embarque: Aún NO embarcó en el país de origen (Pago por adelantado)",
-                "2. En tránsito: Embarcada en origen con Documento de Transporte emitido (B/L, CRT o AWB)",
-                "3. En plaza: Ya arribó al país y fue nacionalizada (Despacho a plaza oficializado)"
-            ]
-        )
-        if "1. Pre-embarque" in estado_mercaderia_label:
-            estado_mercaderia = "NO_EMBARCADA"
-        elif "2. En tránsito" in estado_mercaderia_label:
-            estado_mercaderia = "EN_VIAJE"
-        else:
-            estado_mercaderia = "NACIONALIZADA"
-            
-        es_bien_capital = st.checkbox("¿La mercadería califica como Bien de Capital / Maquinaria (BK)?", value=False)
-        
-        concepto_propuesto_impo = st.selectbox(
-            "¿Qué código de pago sugirió el banco o intentaba usar el cliente?",
-            [
-                "No está seguro (Requiere encuadre del consultor)",
-                "B05 - Pago anticipado de importaciones",
-                "B07 - Pago a la vista de importaciones",
-                "B06 - Pago diferido de importaciones",
-                "B12 - Pago anticipado de bienes de capital"
-            ]
-        )
-        cod_propuesto_limpio = concepto_propuesto_impo[:3] if "B" in concepto_propuesto_impo else "NO_SABE"
-        
-        monto_impo = st.number_input("Monto a transferir al exterior (USD):", value=45000.0, step=5000.0)
-        fecha_giro_impo = st.date_input("Fecha estimada de acceso al mercado / giro:", value=date.today())
-        
-        st.divider()
-        st.markdown("#### 2. Auditoría de Candados de Acceso al MLC (BCRA + ARCA)")
-        
-        empresa_mep = st.checkbox(
-            "La EMPRESA operó títulos valores (MEP / CCL / CEDEARs / Canje) en los últimos 90 o 180 días",
-            value=False
-        )
-        socios_mep = st.checkbox(
-            "Los SOCIOS, directores, accionistas controlantes o apoderados operaron títulos valores en los últimos 90 o 180 días",
-            value=False,
-            help="Comunicación 'A' 7030 punto 2: el acceso de la sociedad se bloquea si las personas humanas vinculadas operaron en la bolsa."
-        )
-        activos_100k = st.checkbox(
-            "Posee más de USD 100.000 líquidos disponibles en cuentas bancarias del exterior",
-            value=False
-        )
-        
-        c_arca1, c_arca2 = st.columns(2)
-        with c_arca1:
-            cuit_activa = st.selectbox("Estado del CUIT en ARCA:", ["Activo y regularizado", "Inconsistencias / Inactivo"]) == "Activo y regularizado"
-        with c_arca2:
-            sedi_opc = st.selectbox(
-                "Estado de la SEDI:",
-                ["SALIDA / APROBADA", "OFICIALIZADA", "BLOQUEADA / OBSERVADA", "NO_APLICA"]
-            )
-            
-    with col_output:
-        st.markdown("#### 3. Dictamen Técnico y Orientación Normativa")
-        
-        diag_impo = diagnose_import_operation(
-            estado_mercaderia=estado_mercaderia,
-            docs_disponibles=[],
-            concepto_propuesto=cod_propuesto_limpio,
-            monto_usd=monto_impo,
-            fecha_operacion=fecha_giro_impo,
-            empresa_mep_ccl=empresa_mep,
-            socios_mep_ccl=socios_mep,
-            activos_externos_100k=activos_100k,
-            arca_cuit_activa=cuit_activa,
-            sedi_estado=sedi_opc,
-            es_bien_capital=es_bien_capital
-        )
-        
-        sem = diag_impo["semaforo"]
-        
-        # Tarjeta de Estado
-        if sem["nivel"] == "CRITICO":
-            badge_html = f'<div class="badge-bloqueado">🔴 {sem["estado"]}</div>'
-        elif sem["nivel"] == "MEDIO":
-            badge_html = f'<div class="badge-observado">🟡 {sem["estado"]}</div>'
-        else:
-            badge_html = f'<div class="badge-viable">🟢 {sem["estado"]}</div>'
-            
-        st.markdown(f"""
-        <div class="dictamen-box">
-            <div style="margin-bottom: 12px;">{badge_html}</div>
-            <div style="font-size: 14px; color: #334155; margin-bottom: 14px;">{sem["resumen"]}</div>
-            <div class="concept-tag">📌 Concepto Oficial Dictaminado: {diag_impo["nombre_concepto"]}</div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Bloqueos detectados
-        if diag_impo["bloqueos"]:
-            st.error("🚨 **Bloqueos Normativos Detectados:**")
-            for b in diag_impo["bloqueos"]:
-                st.markdown(f"* **{b['origen']}:** {b['detalle']}")
-                
-        # Observaciones
-        if diag_impo["observaciones"]:
-            st.warning("⚠️ **Observaciones y Advertencias de Encuadre:**")
-            for o in diag_impo["observaciones"]:
-                st.markdown(f"* **{o['origen']}:** {o['detalle']}")
-                
-        # Fundamento Normativo
-        with st.expander("📖 **Fundamento Normativo BCRA & Obligaciones Posteriores**", expanded=True):
-            st.write(diag_impo["fundamento_normativo"])
-            if diag_impo["plazo_demostracion_dias"] > 0:
-                st.info(f"⏳ **Plazo de demostración aduanera (SEPAIMPO):** {diag_impo['plazo_demostracion_dias']} días corridos desde la fecha de transferencia para presentar el Despacho SIM cumplido.")
-                
-        # Checklist Documental
-        with st.expander("📂 **Checklist Documental Exigible por la Mesa de Comex del Banco**", expanded=True):
-            for idx, doc in enumerate(diag_impo["checklist_documental"], 1):
-                st.markdown(f"**{idx}.** {doc}")
-                
-        # Botón de Descarga del Dictamen Técnico en PDF
-        st.divider()
-        pdf_bytes = generate_dictamen_tecnico_pdf(
-            company_name=empresa_nombre,
-            cuit=empresa_cuit,
-            operation_type="IMPORTACIÓN DE BIENES",
-            diagnosis_data=diag_impo,
-            signer_name=consultor_nombre,
-            signer_role=consultor_cargo
-        )
-        
-        st.download_button(
-            label="📥 Descargar Dictamen Técnico de Importación (PDF Membretado)",
-            data=pdf_bytes,
-            file_name=f"Dictamen_Impo_{empresa_cuit.replace('-', '')}_{datetime.now().strftime('%Y%m%d')}.pdf",
-            mime="application/pdf",
-            use_container_width=True
-        )
-
-
-# ==============================================================================
-# 🚢 2. DICTAMEN DE EXPORTACIONES (BCRA)
-# ==============================================================================
-elif modulo == "🚢 2. Dictamen de Exportaciones (BCRA)":
-    st.markdown("### 🚢 Relevamiento y Dictamen Técnico de Exportación")
-    st.caption("Evaluación de encuadre cambiario (B01 vs B02), plazos de liquidación obligatoria por NCM y seguimiento SECOEXPO.")
-    
-    col_input_exp, col_output_exp = st.columns([1.1, 1.3], gap="large")
-    
-    with col_input_exp:
-        st.markdown("#### 1. Relevamiento del Cobro de Exportación")
+    # --------------------------------------------------------------------------
+    # COLUMNA IZQUIERDA: RELEVAMIENTO OPERATIVO Y CARGA DE DOCUMENTOS
+    # --------------------------------------------------------------------------
+    with col_relev:
+        st.markdown('<div class="card-section-title">📝 1. Relevamiento de la Operación de Exportación</div>', unsafe_allow_html=True)
         
         momento_fondos_label = st.radio(
             "¿En qué momento ingresan o se liquidan las divisas del exterior?",
             [
-                "1. Pre-embarque: El comprador exterior transfiere ANTES de que la mercadería sea embarcada",
+                "1. Pre-embarque: El comprador exterior transfiere ANTES de embarcar la mercadería (Anticipo)",
                 "2. Post-embarque: Las divisas ingresan DESPUÉS de haber embarcado (con Permiso de Embarque cumplido)"
             ]
         )
-        if "1. Pre-embarque" in momento_fondos_label:
-            momento_fondos = "FONDOS_ANTES_DE_EMBARCAR"
-        else:
-            momento_fondos = "FONDOS_DESPUES_DE_EMBARCAR"
-            
+        es_anticipo = "1. Pre-embarque" in momento_fondos_label
+        momento_fondos = "FONDOS_ANTES_DE_EMBARCAR" if es_anticipo else "FONDOS_DESPUES_DE_EMBARCAR"
+        
         concepto_propuesto_expo = st.selectbox(
             "¿Qué código de cobro pensaba declarar el exportador o sugirió el banco?",
             [
-                "No está seguro (Requiere encuadre del consultor)",
+                "No está seguro (A determinar por el dictamen técnico)",
                 "B01 - Cobro de exportaciones de bienes",
                 "B02 - Cobro anticipado de exportaciones",
                 "B03 - Financiación del exterior"
@@ -321,16 +240,20 @@ elif modulo == "🚢 2. Dictamen de Exportaciones (BCRA)":
         )
         cod_expo_limpio = concepto_propuesto_expo[:3] if "B" in concepto_propuesto_expo else "NO_SABE"
         
-        monto_expo = st.number_input("Monto a liquidar en el mercado (USD):", value=65000.0, step=5000.0)
-        
-        if momento_fondos == "FONDOS_ANTES_DE_EMBARCAR":
-            fecha_expo = st.date_input("Fecha de ingreso / liquidación del anticipo:", value=date.today())
-            cat_ncm = "MANUFACTURAS_MOI_PYME"
-            vinculada = False
-        else:
-            fecha_expo = st.date_input("Fecha del Cumplido Aduanero del Permiso de Embarque (SIM):", value=date.today())
-            st.divider()
-            st.markdown("#### Posición Arancelaria y Plazo Legal (BCRA)")
+        c_monto, c_fecha = st.columns(2)
+        with c_monto:
+            monto_expo = st.number_input("Monto a liquidar (USD):", value=65000.0, step=5000.0)
+        with c_fecha:
+            if es_anticipo:
+                fecha_expo = st.date_input("Fecha estimada de cobro del anticipo:", value=date.today())
+                cat_ncm = "MANUFACTURAS_MOI_PYME"
+                vinculada = False
+            else:
+                fecha_expo = st.date_input("Fecha de Cumplido Aduanero del Permiso:", value=date.today())
+                
+        if not es_anticipo:
+            st.markdown("---")
+            st.markdown("**Posición Arancelaria y Plazo Legal (BCRA):**")
             cat_ncm = st.selectbox(
                 "Rubro / Clasificación NCM de la mercadería exportada:",
                 list(CATEGORIAS_NCM_EXPO.keys()),
@@ -339,8 +262,78 @@ elif modulo == "🚢 2. Dictamen de Exportaciones (BCRA)":
             )
             vinculada = st.checkbox("¿La venta se realiza a una empresa vinculada en el exterior?", value=False)
             
-    with col_output_exp:
-        st.markdown("#### 2. Dictamen Técnico y Encuadre Normativo")
+        st.markdown("---")
+        st.markdown('<div class="card-section-title">📂 2. Carga de Documentación Probatoria (Legajo Digital)</div>', unsafe_allow_html=True)
+        st.caption("Cargá los archivos digitalizados correspondientes a cada campo para auditar la solidez del legajo ante el banco:")
+        
+        archivos_adjuntos = []
+        
+        if not es_anticipo:
+            # 1. Permiso de Embarque
+            c_pe_txt, c_pe_file = st.columns([1, 1.2])
+            with c_pe_txt:
+                pe_num = st.text_input("N° Permiso de Embarque (SIM):", value="26001EC01004567A")
+            with c_pe_file:
+                pe_upload = st.file_uploader("📎 Adjuntar Permiso SIM cumplido (.pdf/.jpg):", type=["pdf", "jpg", "png"], key="up_pe")
+                archivos_adjuntos.append({
+                    "name": f"Permiso de Embarque SIM N° {pe_num}",
+                    "attached": pe_upload is not None,
+                    "filename": pe_upload.name if pe_upload else None
+                })
+                
+            # 2. Factura de Exportación E
+            c_fac_txt, c_fac_file = st.columns([1, 1.2])
+            with c_fac_txt:
+                fac_num = st.text_input("N° Factura Electrónica 'E':", value="00001-00000456")
+            with c_fac_file:
+                fac_upload = st.file_uploader("📎 Adjuntar Factura 'E' emitida (.pdf):", type=["pdf"], key="up_fac")
+                archivos_adjuntos.append({
+                    "name": f"Factura Electrónica 'E' N° {fac_num}",
+                    "attached": fac_upload is not None,
+                    "filename": fac_upload.name if fac_upload else None
+                })
+                
+            # 3. Documento de Transporte
+            c_bl_txt, c_bl_file = st.columns([1, 1.2])
+            with c_bl_txt:
+                bl_num = st.text_input("Doc. Transporte (B/L, CRT o AWB):", value="BL-MEDU-9876543")
+            with c_bl_file:
+                bl_upload = st.file_uploader("📎 Adjuntar Documento de Transporte (.pdf):", type=["pdf"], key="up_bl")
+                archivos_adjuntos.append({
+                    "name": f"Conocimiento de Transporte {bl_num}",
+                    "attached": bl_upload is not None,
+                    "filename": bl_upload.name if bl_upload else None
+                })
+        else:
+            # 1. Proforma u Orden de Compra
+            c_prof_txt, c_prof_file = st.columns([1, 1.2])
+            with c_prof_txt:
+                prof_num = st.text_input("N° Proforma u Orden de Compra:", value="PI-2026-EXPO-098")
+            with c_prof_file:
+                prof_upload = st.file_uploader("📎 Adjuntar Factura Proforma / PO (.pdf):", type=["pdf"], key="up_prof")
+                archivos_adjuntos.append({
+                    "name": f"Factura Proforma N° {prof_num}",
+                    "attached": prof_upload is not None,
+                    "filename": prof_upload.name if prof_upload else None
+                })
+                
+            # 2. Contrato Comercial o Pedido
+            c_cont_txt, c_cont_file = st.columns([1, 1.2])
+            with c_cont_txt:
+                cont_num = st.text_input("Referencia Contrato / Pedido:", value="PO-BUYER-USA-441")
+            with c_cont_file:
+                cont_upload = st.file_uploader("📎 Adjuntar Contrato Comercial / Orden (.pdf):", type=["pdf"], key="up_cont")
+                archivos_adjuntos.append({
+                    "name": f"Contrato Comercial {cont_num}",
+                    "attached": cont_upload is not None,
+                    "filename": cont_upload.name if cont_upload else None
+                })
+
+    # --------------------------------------------------------------------------
+    # COLUMNA DERECHA: DICTAMEN TÉCNICO Y AUDITORÍA EN TIEMPO REAL
+    # --------------------------------------------------------------------------
+    with col_dictamen:
+        st.markdown('<div class="card-section-title">⚖️ 3. Dictamen Técnico y Orientación Normativa</div>', unsafe_allow_html=True)
         
         diag_expo = diagnose_export_operation(
             momento_fondos=momento_fondos,
@@ -353,46 +346,63 @@ elif modulo == "🚢 2. Dictamen de Exportaciones (BCRA)":
         )
         
         sem_exp = diag_expo["semaforo"]
-        
         if sem_exp.get("nivel") == "CRITICO":
-            badge_exp = f'<div class="badge-bloqueado">🔴 {sem_exp.get("estado", "")}</div>'
+            badge_html = f'<div class="badge-bloqueado">🔴 {sem_exp.get("estado", "")}</div>'
         elif sem_exp.get("nivel") in ["ALTO", "MEDIO"]:
-            badge_exp = f'<div class="badge-observado">🟡 {sem_exp.get("estado", "")}</div>'
+            badge_html = f'<div class="badge-observado">🟡 {sem_exp.get("estado", "")}</div>'
         else:
-            badge_exp = f'<div class="badge-viable">🟢 {sem_exp.get("estado", "")}</div>'
+            badge_html = f'<div class="badge-viable">🟢 {sem_exp.get("estado", "")}</div>'
             
         st.markdown(f"""
-        <div class="dictamen-box">
-            <div style="margin-bottom: 12px;">{badge_exp}</div>
-            <div style="font-size: 14px; color: #334155; margin-bottom: 14px;">{sem_exp.get("resumen", sem_exp.get("accion", ""))}</div>
+        <div class="card-dictamen">
+            <div style="margin-bottom: 12px;">{badge_html}</div>
+            <div style="font-size: 14px; color: #1E293B; line-height: 1.5; margin-bottom: 14px;">
+                {sem_exp.get("resumen", sem_exp.get("accion", ""))}
+            </div>
             <div class="concept-tag">📌 Concepto Oficial Dictaminado: {diag_expo["nombre_concepto"]}</div>
         </div>
         """, unsafe_allow_html=True)
         
-        # Alertas críticas
-        if diag_expo["observaciones"]:
-            for o in diag_expo["observaciones"]:
-                st.warning(f"**{o['origen']}**: {o['detalle']}")
-                
-        # Detalle de Plazos
+        # Alerta antisumario si intentaban usar B01 antes de embarcar
+        if es_anticipo and cod_expo_limpio == "B01":
+            st.markdown("""
+            <div class="alert-antisumario">
+                <strong>🚨 ERROR CRÍTICO EVITADO: Intento de uso de Concepto B01</strong><br>
+                El cliente o banco sugirió liquidar bajo <strong>B01</strong>. Sin embargo, conforme normativa del BCRA, el código B01 exige indefectiblemente un <strong>Permiso de Embarque ya oficializado y cumplido en Aduana</strong>. Liquidar un anticipo como B01 genera rechazo inmediato en la mesa de Comex o la apertura de un reclamo en SECOEXPO. <strong>El encuadre obligado por ley es B02.</strong>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        # Métricas de Plazos
         pinfo = diag_expo.get("plazo_info", {})
         if pinfo:
-            c_p1, c_p2 = st.columns(2)
-            with c_p1:
-                st.metric("Plazo Normativo:", f"{pinfo.get('dias', 0)} días")
-            with c_p2:
-                st.metric("Fecha Límite Exigible:", pinfo.get("fecha_limite", date.today()).strftime("%d/%m/%Y"))
+            c1, c2 = st.columns(2)
+            with c1:
+                st.metric("Plazo Legal Otorgado:", f"{pinfo.get('dias', 0)} días")
+            with c2:
+                f_limite = pinfo.get("fecha_limite")
+                f_limite_str = f_limite.strftime("%d/%m/%Y") if hasattr(f_limite, "strftime") else str(f_limite)
+                st.metric("Fecha Límite Exigible:", f_limite_str)
+                
+        # Auditoría del Legajo Documental Adjunto
+        st.markdown("---")
+        st.markdown("**Auditoría del Legajo Digital Aportado:**")
+        docs_adjuntados_count = sum(1 for a in archivos_adjuntos if a["attached"])
+        total_docs_count = len(archivos_adjuntos)
+        
+        st.progress(docs_adjuntados_count / max(total_docs_count, 1))
+        st.caption(f"Solidez del Legajo: {docs_adjuntados_count} de {total_docs_count} documentos verificados.")
+        
+        for item in archivos_adjuntos:
+            if item["attached"]:
+                st.markdown(f"✅ <span class='doc-status-ok'>{item['name']}:</span> Archivo adjunto (`{item['filename']}`)", unsafe_allow_html=True)
+            else:
+                st.markdown(f"⏳ <span class='doc-status-pending'>{item['name']}:</span> Pendiente de carga", unsafe_allow_html=True)
                 
         # Fundamento Normativo
         with st.expander("📖 **Fundamento Normativo BCRA & Obligaciones en SECOEXPO**", expanded=True):
             st.write(diag_expo["fundamento_normativo"])
             
-        # Checklist Documental
-        with st.expander("📂 **Checklist Documental Exigible por el Banco**", expanded=True):
-            for idx, doc in enumerate(diag_expo["checklist_documental"], 1):
-                st.markdown(f"**{idx}.** {doc}")
-                
-        # Botón de Descarga del Dictamen en PDF
+        # Botón de Descarga de Dictamen en PDF
         st.divider()
         pdf_bytes_exp = generate_dictamen_tecnico_pdf(
             company_name=empresa_nombre,
@@ -400,7 +410,8 @@ elif modulo == "🚢 2. Dictamen de Exportaciones (BCRA)":
             operation_type="EXPORTACIÓN DE BIENES",
             diagnosis_data=diag_expo,
             signer_name=consultor_nombre,
-            signer_role=consultor_cargo
+            signer_role=consultor_cargo,
+            attached_files=archivos_adjuntos
         )
         
         st.download_button(
@@ -413,194 +424,203 @@ elif modulo == "🚢 2. Dictamen de Exportaciones (BCRA)":
 
 
 # ==============================================================================
-# 📑 3. AUDITORÍA DE SÁBANAS BANCARIAS (SEPAIMPO / SECOEXPO)
+# 📦 MÓDULO 2: IMPORTACIONES
 # ==============================================================================
 else:
-    st.markdown("### 📑 Auditoría y Regularización de Sábanas Bancarias")
-    st.caption("Carga de planillas de seguimiento emitidas por entidades financieras (Santander, Galicia, Macro, BBVA, etc.) y generación de notas oficiales.")
+    st.markdown("""
+    <div class="portal-header">
+        <div class="portal-title">📦 Mesa de Importaciones | Encuadre Normativo & Acceso al MLC</div>
+        <div class="portal-subtitle">Evaluación de giros al exterior (B05 / B07 / B06 / B12), candados bursátiles (Empresa + Socios) y validaciones cruzadas ARCA.</div>
+    </div>
+    """, unsafe_allow_html=True)
     
-    submodulo_sabana = st.radio(
-        "Seleccioná el Régimen a Procesar:",
-        ["SEPAIMPO (Seguimiento de Pagos de Importaciones)", "SECOEXPO (Seguimiento de Cobros de Exportaciones)"],
-        horizontal=True
-    )
+    col_relev_im, col_dictamen_im = st.columns([1.15, 1.25], gap="large")
     
-    tipo_regimen = "SEPAIMPO" if "SEPAIMPO" in submodulo_sabana else "SECOEXPO"
-    
-    col_upload, col_view = st.columns([1, 1.8], gap="medium")
-    
-    with col_upload:
-        st.markdown("#### 1. Carga de Sábana Bancaria")
-        uploaded_file = st.file_uploader(
-            f"Arrastrá el archivo Excel o CSV de {tipo_regimen} que te envió el banco:",
-            type=["xlsx", "xls", "csv"]
+    with col_relev_im:
+        st.markdown('<div class="card-section-title">📝 1. Relevamiento Operativo y Estado de Mercadería</div>', unsafe_allow_html=True)
+        
+        estado_label = st.radio(
+            "Estado físico de la mercadería importada:",
+            [
+                "1. Pre-embarque: Aún NO embarcó en el país de origen (Pago por adelantado)",
+                "2. En tránsito: Embarcada en origen con Documento de Transporte emitido (B/L, CRT o AWB)",
+                "3. En plaza: Ya arribó al país y fue nacionalizada (Despacho a plaza oficializado)"
+            ]
+        )
+        if "1. Pre-embarque" in estado_label:
+            estado_impo = "NO_EMBARCADA"
+        elif "2. En tránsito" in estado_label:
+            estado_impo = "EN_VIAJE"
+        else:
+            estado_impo = "NACIONALIZADA"
+            
+        es_bien_capital = st.checkbox("¿La mercadería califica como Bien de Capital / Maquinaria (BK)?", value=False)
+        
+        concepto_propuesto_impo = st.selectbox(
+            "¿Qué código de giro intentaba usar el cliente o sugirió el banco?",
+            [
+                "No está seguro (A determinar por el dictamen técnico)",
+                "B05 - Pago anticipado de importaciones",
+                "B07 - Pago a la vista de importaciones",
+                "B06 - Pago diferido de importaciones",
+                "B12 - Pago anticipado de bienes de capital"
+            ]
+        )
+        cod_impo_limpio = concepto_propuesto_impo[:3] if "B" in concepto_propuesto_impo else "NO_SABE"
+        
+        c_monto_im, c_fecha_im = st.columns(2)
+        with c_monto_im:
+            monto_impo = st.number_input("Monto a transferir (USD):", value=45000.0, step=5000.0, key="m_impo")
+        with c_fecha_im:
+            fecha_giro_impo = st.date_input("Fecha estimada de giro:", value=date.today(), key="f_impo")
+            
+        st.markdown("---")
+        st.markdown('<div class="card-section-title">📂 2. Carga de Documentación de Importación</div>', unsafe_allow_html=True)
+        
+        archivos_impo = []
+        
+        # Factura Comercial / Proforma
+        c_fac_im, c_fac_up = st.columns([1, 1.2])
+        with c_fac_im:
+            num_fac_im = st.text_input("N° Factura Exterior:", value="INV-EXT-2026-99")
+        with c_fac_up:
+            up_fac_im = st.file_uploader("📎 Factura Comercial / Proforma (.pdf):", type=["pdf"], key="up_fac_im")
+            archivos_impo.append({"name": f"Factura Exterior {num_fac_im}", "attached": up_fac_im is not None, "filename": up_fac_im.name if up_fac_im else None})
+            
+        # Doc de Transporte o Despacho
+        if estado_impo in ["EN_VIAJE", "NACIONALIZADA"]:
+            c_bl_im, c_bl_up = st.columns([1, 1.2])
+            with c_bl_im:
+                num_bl_im = st.text_input("N° Conocimiento de Embarque (B/L):", value="MEDU98765432")
+            with c_bl_up:
+                up_bl_im = st.file_uploader("📎 Conocimiento de Embarque B/L (.pdf):", type=["pdf"], key="up_bl_im")
+                archivos_impo.append({"name": f"Conocimiento de Embarque B/L {num_bl_im}", "attached": up_bl_im is not None, "filename": up_bl_im.name if up_bl_im else None})
+                
+        if estado_impo == "NACIONALIZADA":
+            c_desp_im, c_desp_up = st.columns([1, 1.2])
+            with c_desp_im:
+                num_desp = st.text_input("N° Despacho de Importación SIM:", value="26001IC04001234A")
+            with c_desp_up:
+                up_desp = st.file_uploader("📎 Despacho SIM Oficializado (.pdf):", type=["pdf"], key="up_desp")
+                archivos_impo.append({"name": f"Despacho SIM {num_desp}", "attached": up_desp is not None, "filename": up_desp.name if up_desp else None})
+                
+        # Constancia SEDI
+        c_sedi_im, c_sedi_up = st.columns([1, 1.2])
+        with c_sedi_im:
+            num_sedi = st.text_input("N° Declaración SEDI:", value="SEDI-2026-004455")
+        with c_sedi_up:
+            up_sedi = st.file_uploader("📎 Constancia SEDI en estado SALIDA (.pdf):", type=["pdf"], key="up_sedi")
+            archivos_impo.append({"name": f"Constancia SEDI {num_sedi}", "attached": up_sedi is not None, "filename": up_sedi.name if up_sedi else None})
+            
+        st.markdown("---")
+        st.markdown('<div class="card-section-title">🔒 3. Auditoría de Candados Cruzados (BCRA + ARCA)</div>', unsafe_allow_html=True)
+        
+        empresa_mep = st.checkbox(
+            "La EMPRESA operó títulos valores (MEP / CCL / CEDEARs) en los últimos 90 o 180 días",
+            value=False,
+            key="im_empresa_mep"
+        )
+        socios_mep = st.checkbox(
+            "Los SOCIOS, directores o controlantes operaron títulos valores en los últimos 90 o 180 días",
+            value=False,
+            help="Comunicación 'A' 7030 punto 2: si los socios operaron en la bolsa, la empresa no puede acceder al MLC.",
+            key="im_socios_mep"
+        )
+        activos_100k = st.checkbox(
+            "Posee más de USD 100.000 líquidos disponibles en cuentas del exterior",
+            value=False,
+            key="im_activos_100k"
         )
         
-        usar_demo = st.button("🧪 Cargar Sábana de Prueba (Demostración)", use_container_width=True)
-        
-        df_raw = None
-        if uploaded_file is not None:
-            try:
-                if uploaded_file.name.endswith(".csv"):
-                    df_raw = pd.read_csv(uploaded_file)
-                else:
-                    df_raw = pd.read_excel(uploaded_file)
-                st.success(f"Archivo cargado correctamente: {len(df_raw)} registros encontrados.")
-            except Exception as e:
-                st.error(f"Error al leer el archivo: {e}")
-        elif usar_demo:
-            if tipo_regimen == "SEPAIMPO":
-                df_raw = get_demo_sepaimpo_data()
-            else:
-                df_raw = get_demo_secoexpo_data()
-            st.info("Cargados datos de demostración con casos verde, amarillo y rojo.")
-            
-    with col_view:
-        st.markdown("#### 2. Diagnóstico y Semáforo de Operaciones")
-        if df_raw is not None:
-            df_norm = parse_sabana_dataframe(df_raw, tipo_regimen)
-            
-            # Contadores
-            c_v = len(df_norm[df_norm["Semáforo"].str.contains("🟢")])
-            c_a = len(df_norm[df_norm["Semáforo"].str.contains("🟡")])
-            c_r = len(df_norm[df_norm["Semáforo"].str.contains("🔴")])
-            
-            m1, m2, m3 = st.columns(3)
-            m1.metric("En Plazo (🟢)", c_v)
-            m2.metric("Atención (🟡)", c_a)
-            m3.metric("Urgente / Vencido (🔴)", c_r)
-            
-            st.dataframe(
-                df_norm[["Operación / Ref", "Fecha Base", "Fecha Límite", "Días Restantes", "Semáforo", "Diagnóstico Operativo"]],
-                use_container_width=True,
-                hide_index=True
+        c_arc1, c_arc2 = st.columns(2)
+        with c_arc1:
+            cuit_activa = st.selectbox("Estado del CUIT en ARCA:", ["Activo y regularizado", "Inconsistencias / Inactivo"], key="cuit_arc") == "Activo y regularizado"
+        with c_arc2:
+            sedi_opc = st.selectbox(
+                "Estado de la SEDI en Aduana:",
+                ["SALIDA / APROBADA", "OFICIALIZADA", "BLOQUEADA / OBSERVADA", "NO_APLICA"],
+                key="sedi_arc"
             )
+
+    with col_dictamen_im:
+        st.markdown('<div class="card-section-title">⚖️ 4. Dictamen Técnico y Viabilidad Cambiaria</div>', unsafe_allow_html=True)
+        
+        diag_impo = diagnose_import_operation(
+            estado_mercaderia=estado_impo,
+            docs_disponibles=[],
+            concepto_propuesto=cod_impo_limpio,
+            monto_usd=monto_impo,
+            fecha_operacion=fecha_giro_impo,
+            empresa_mep_ccl=empresa_mep,
+            socios_mep_ccl=socios_mep,
+            activos_externos_100k=activos_100k,
+            arca_cuit_activa=cuit_activa,
+            sedi_estado=sedi_opc,
+            es_bien_capital=es_bien_capital
+        )
+        
+        sem_im = diag_impo["semaforo"]
+        if sem_im["nivel"] == "CRITICO":
+            badge_html_im = f'<div class="badge-bloqueado">🔴 {sem_im["estado"]}</div>'
+        elif sem_im["nivel"] == "MEDIO":
+            badge_html_im = f'<div class="badge-observado">🟡 {sem_im["estado"]}</div>'
         else:
-            st.info("Subí una sábana del banco o tocá el botón 'Cargar Sábana de Prueba' para visualizar el diagnóstico.")
+            badge_html_im = f'<div class="badge-viable">🟢 {sem_im["estado"]}</div>'
             
-    # Sección de Generación de Notas Oficiales
-    st.divider()
-    st.markdown("#### 3. Centro de Emisión de Notas Formales de Descargo / Prórroga")
-    
-    if tipo_regimen == "SEPAIMPO":
-        st.markdown("**Generar Solicitud de Prórroga Bancaria SEPAIMPO:**")
-        cp1, cp2, cp3 = st.columns(3)
-        with cp1:
-            banco_sel = st.selectbox("Banco Interviniente:", ["Banco Santander", "Banco Galicia", "Banco BBVA", "Banco Macro", "Otro"])
-            desp_num = st.text_input("N° Despacho / Registro:", value="26001IC04008899B")
-        with cp2:
-            dias_prorr = st.number_input("Días de prórroga a solicitar:", value=90, step=30)
-            motivo_prorr = st.selectbox("Causal de Demora:", [
-                "Demoras logísticas en flete internacional marítimo y congestión portuaria",
-                "Retraso en la emisión de certificados técnicos / ensayos de laboratorio INTI",
-                "Demora en la inspección aduanera y canal rojo de verificación"
-            ])
-        with cp3:
-            st.write("")
-            st.write("")
-            pdf_prorr = generate_prorroga_sepaimpo_pdf(
-                company_name=empresa_nombre,
-                cuit=empresa_cuit,
-                bank_name=banco_sel,
-                operation_ref=desp_num,
-                additional_days=dias_prorr,
-                justification=motivo_prorr,
-                signer_name=empresa_firmante,
-                signer_role="Apoderado"
-            )
-            st.download_button(
-                "📥 Descargar Solicitud de Prórroga en PDF",
-                data=pdf_prorr,
-                file_name=f"Prorroga_SEPAIMPO_{desp_num}.pdf",
-                mime="application/pdf",
-                use_container_width=True
-            )
-    else:
-        tab_mermas, tab_zona, tab_imp = st.tabs([
-            "Descargo por Mermas / Descuentos",
-            "Desafectación Venta en Zona Primaria",
-            "Imputación de Permiso a Anticipo B02"
-        ])
+        st.markdown(f"""
+        <div class="card-dictamen">
+            <div style="margin-bottom: 12px;">{badge_html_im}</div>
+            <div style="font-size: 14px; color: #1E293B; line-height: 1.5; margin-bottom: 14px;">
+                {sem_im["resumen"]}
+            </div>
+            <div class="concept-tag">📌 Concepto Oficial Dictaminado: {diag_impo["nombre_concepto"]}</div>
+        </div>
+        """, unsafe_allow_html=True)
         
-        with tab_mermas:
-            cm1, cm2, cm3 = st.columns(3)
-            with cm1:
-                b_mer = st.selectbox("Banco:", ["Banco Santander", "Banco Galicia", "Banco BBVA", "Banco Macro"], key="b_mer")
-                pe_mer = st.text_input("N° Permiso de Embarque:", value="26001EC01004455C", key="pe_mer")
-            with cm2:
-                fob_orig = st.number_input("FOB Original Aduanero (USD):", value=50000.0, key="fob_mer")
-                fob_rec = st.number_input("Monto efectivamente cobrado (USD):", value=46500.0, key="rec_mer")
-            with cm3:
-                nc_num = st.text_input("N° Nota de Crédito 'E':", value="00001-00000045", key="nc_mer")
-                surv_num = st.text_input("N° Certificado Peritaje / Survey:", value="SRV-2026-998", key="surv_mer")
+        if diag_impo["bloqueos"]:
+            st.error("🚨 **Bloqueos Normativos Detectados:**")
+            for b in diag_impo["bloqueos"]:
+                st.markdown(f"* **{b['origen']}:** {b['detalle']}")
                 
-            pdf_mer = generate_descargo_mermas_pdf(
-                company_name=empresa_nombre,
-                cuit=empresa_cuit,
-                bank_name=b_mer,
-                pe_number=pe_mer,
-                original_fob=fob_orig,
-                amount_received=fob_rec,
-                nc_number=nc_num,
-                survey_number=surv_num,
-                signer_name=empresa_firmante,
-                signer_role="Apoderado"
-            )
-            st.download_button(
-                "📥 Descargar Descargo por Mermas en PDF",
-                data=pdf_mer,
-                file_name=f"Descargo_Mermas_{pe_mer}.pdf",
-                mime="application/pdf"
-            )
-            
-        with tab_zona:
-            cz1, cz2 = st.columns(2)
-            with cz1:
-                b_zon = st.selectbox("Banco:", ["Banco Santander", "Banco Galicia", "Banco BBVA"], key="b_zon")
-                pe_zon = st.text_input("N° Permiso de Embarque:", value="26001EC01003322A", key="pe_zon")
-            with cz2:
-                comprador_loc = st.text_input("Razón Social Comprador Local:", value="Compradora Local S.A.", key="comp_zon")
-                fact_loc = st.text_input("Factura Comercial Local N°:", value="00005-00001234", key="fact_zon")
+        if diag_impo["observaciones"]:
+            st.warning("⚠️ **Observaciones de Encuadre:**")
+            for o in diag_impo["observaciones"]:
+                st.markdown(f"* **{o['origen']}:** {o['detalle']}")
                 
-            pdf_zon = generate_zona_primaria_pdf(
-                company_name=empresa_nombre,
-                cuit=empresa_cuit,
-                bank_name=b_zon,
-                pe_number=pe_zon,
-                buyer_name=comprador_loc,
-                local_invoice=fact_loc,
-                signer_name=empresa_firmante,
-                signer_role="Apoderado"
-            )
-            st.download_button(
-                "📥 Descargar Desafectación Zona Primaria en PDF",
-                data=pdf_zon,
-                file_name=f"Desafectacion_ZonaPrimaria_{pe_zon}.pdf",
-                mime="application/pdf"
-            )
-            
-        with tab_imp:
-            ci1, ci2 = st.columns(2)
-            with ci1:
-                b_imp = st.selectbox("Banco:", ["Banco Santander", "Banco Galicia", "Banco BBVA"], key="b_imp")
-                pe_imp = st.text_input("N° Permiso de Embarque cumplido a cancelar:", value="26001EC01007788D", key="pe_imp")
-            with ci2:
-                bol_imp = st.text_input("N° Boleto Cambio Anticipo B02:", value="BOL-2026-B02-0987", key="bol_imp")
-                monto_imp = st.number_input("Monto a imputar (USD):", value=30000.0, key="monto_imp")
+        # Auditoría de Legajo
+        st.markdown("---")
+        st.markdown("**Auditoría del Legajo Digital Aportado:**")
+        docs_impo_count = sum(1 for a in archivos_impo if a["attached"])
+        total_impo_count = len(archivos_impo)
+        st.progress(docs_impo_count / max(total_impo_count, 1))
+        st.caption(f"Solidez del Legajo: {docs_impo_count} de {total_impo_count} documentos cargados.")
+        
+        for item in archivos_impo:
+            if item["attached"]:
+                st.markdown(f"✅ <span class='doc-status-ok'>{item['name']}:</span> Archivo adjunto (`{item['filename']}`)", unsafe_allow_html=True)
+            else:
+                st.markdown(f"⏳ <span class='doc-status-pending'>{item['name']}:</span> Pendiente de carga", unsafe_allow_html=True)
                 
-            pdf_imp = generate_imputacion_b02_pdf(
-                company_name=empresa_nombre,
-                cuit=empresa_cuit,
-                bank_name=b_imp,
-                pe_number=pe_imp,
-                b02_boleto=bol_imp,
-                amount_usd=monto_imp,
-                signer_name=empresa_firmante,
-                signer_role="Apoderado"
-            )
-            st.download_button(
-                "📥 Descargar Nota de Imputación B02 en PDF",
-                data=pdf_imp,
-                file_name=f"Imputacion_B02_{pe_imp}.pdf",
-                mime="application/pdf"
-            )
+        with st.expander("📖 **Fundamento Normativo BCRA & Plazo SEPAIMPO**", expanded=True):
+            st.write(diag_impo["fundamento_normativo"])
+            if diag_impo["plazo_demostracion_dias"] > 0:
+                st.info(f"⏳ **Plazo de Demostración Aduanera:** {diag_impo['plazo_demostracion_dias']} días corridos para presentar el Despacho SIM cumplido.")
+                
+        st.divider()
+        pdf_bytes_im = generate_dictamen_tecnico_pdf(
+            company_name=empresa_nombre,
+            cuit=empresa_cuit,
+            operation_type="IMPORTACIÓN DE BIENES",
+            diagnosis_data=diag_impo,
+            signer_name=consultor_nombre,
+            signer_role=consultor_cargo,
+            attached_files=archivos_impo
+        )
+        
+        st.download_button(
+            label="📥 Descargar Dictamen Técnico de Importación (PDF Membretado)",
+            data=pdf_bytes_im,
+            file_name=f"Dictamen_Impo_{empresa_cuit.replace('-', '')}_{datetime.now().strftime('%Y%m%d')}.pdf",
+            mime="application/pdf",
+            use_container_width=True
+        )

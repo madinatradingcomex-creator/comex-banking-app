@@ -137,7 +137,7 @@ def generate_imputacion_b02_pdf(company_name, cuit, bank_name, pe_number, b02_bo
     return data
 
 
-def generate_dictamen_tecnico_pdf(company_name, cuit, operation_type, diagnosis_data, signer_name="Consultor Responsable", signer_role="Asesor Normativo Comex"):
+def generate_dictamen_tecnico_pdf(company_name, cuit, operation_type, diagnosis_data, signer_name="Consultor Responsable", signer_role="Asesor Normativo Comex", attached_files=None):
     """
     Genera el Dictamen Técnico de Encuadre Normativo y Viabilidad Cambiaria en PDF
     para entregar al cliente o presentar ante la mesa de Comex del banco.
@@ -176,6 +176,13 @@ def generate_dictamen_tecnico_pdf(company_name, cuit, operation_type, diagnosis_
         for idx, doc in enumerate(checklist, 1):
             txt_c += f"{idx}. {doc}\n"
         paragraphs.append(txt_c)
+        
+    if attached_files and len(attached_files) > 0:
+        txt_att = "4. ESTADO DEL LEGAJO DIGITAL Y CONSTANCIAS ADJUNTADAS:\n"
+        for idx, item in enumerate(attached_files, 1):
+            status_symbol = "[ADJUNTADO Y VERIFICADO]" if item.get("attached") else "[PENDIENTE]"
+            txt_att += f"{idx}. {item.get('name')}: {status_symbol} {item.get('filename', '')}\n"
+        paragraphs.append(txt_att)
         
     paragraphs.append(
         "CONCLUSION:\nEl presente informe técnico constituye una orientación profesional basada en el Texto Ordenado de Exterior y Cambios del BCRA y resoluciones complementarias de ARCA a la fecha de emisión. Se recomienda archivar este dictamen junto al legajo de la operación para cualquier auditoría posterior."
