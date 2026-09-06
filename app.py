@@ -57,29 +57,39 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Barra Lateral: Identificación y Navegación Pura
+# Encabezado Institucional
+st.markdown('<div class="main-title">🏛️ COMEX Asistente Bancario & Cambiario</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtitle">Régimen Informativo Bancario BCRA / ARCA · SEPAIMPO · SECOEXPO · Acceso al MLC</div>', unsafe_allow_html=True)
+
+# Selector de Módulos Principal (Visible y cómodo en Celulares, Tablets y Computadoras)
+modulo_opciones = [
+    "📦 1. Módulo Importaciones",
+    "🚢 2. Módulo Exportaciones",
+    "📑 3. Módulo SEPAIMPO (Bancos)",
+    "📑 4. Módulo SECOEXPO (Bancos)"
+]
+
+modulo = st.segmented_control(
+    "Seleccioná el Módulo Operativo:",
+    options=modulo_opciones,
+    default="📦 1. Módulo Importaciones"
+)
+if not modulo:
+    modulo = "📦 1. Módulo Importaciones"
+
+# Barra Lateral: Identificación y Perfil de Empresa
 with st.sidebar:
     st.image("https://img.icons8.com/fluency/96/bank-building.png", width=56)
     st.markdown("### **COMEX Consultoría**")
     st.caption("Régimen Informativo Bancario (BCRA / ARCA)")
-    st.divider()
-    
-    modulo = st.radio(
-        "SELECCIONÁ EL MÓDULO:",
-        [
-            "📦 1. Módulo Importaciones",
-            "🚢 2. Módulo Exportaciones",
-            "📑 3. Módulo SEPAIMPO (Bancos)",
-            "📑 4. Módulo SECOEXPO (Bancos)"
-        ]
-    )
-    
     st.divider()
     st.markdown("**Datos del Titular / Empresa:**")
     empresa_nombre = st.text_input("Razón Social:", value="Empresa Demo S.A.", key="cfg_empresa")
     empresa_cuit = st.text_input("CUIT:", value="30-71234567-8", key="cfg_cuit")
     empresa_firmante = st.text_input("Firmante:", value="Juan Pérez", key="cfg_firmante")
     empresa_cargo = st.text_input("Cargo:", value="Apoderado / Socio Gerente", key="cfg_cargo")
+    st.divider()
+    st.info("💡 Cambiá de módulo usando los botones superiores en pantalla.")
 
 
 # ==============================================================================
