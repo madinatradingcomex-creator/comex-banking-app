@@ -118,15 +118,14 @@ st.markdown("""
         display: inline-block;
     }
     
-    /* Tag de Concepto Dictaminado */
     .concept-tag-dark {
-        background-color: #172554;
+        background-color: #1E293B;
         color: #93C5FD;
-        border: 1px solid #1D4ED8;
-        padding: 10px 16px;
-        border-radius: 8px;
-        font-weight: 700;
-        font-size: 15px;
+        padding: 8px 14px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 14px;
+        border-left: 4px solid #3B82F6;
         margin: 14px 0;
         display: block;
     }
@@ -159,8 +158,6 @@ st.markdown("""
     /* ===================================================================== */
     /* BOTONES DE ALTO CONTRASTE Y VISIBILIDAD (MODO OSCURO)                 */
     /* ===================================================================== */
-    
-    /* Botón de Carga dentro de los File Uploaders (Upload) */
     div[data-testid="stFileUploader"] button,
     button[data-testid="baseButton-secondary"],
     .stButton > button {
@@ -221,9 +218,34 @@ st.markdown("""
         color: #CBD5E1 !important;
     }
     
-    /* ===================================================================== */
-    /* DESPLEGABLES (SELECTBOX): TEXTO COMPLETO, SIN RECORTAR Y LEGIBLE       */
-    /* ===================================================================== */
+    /* Textareas e Inputs en Modo Oscuro */
+    div[data-baseweb="textarea"],
+    div[data-testid="stTextArea"] textarea {
+        background-color: #0F172A !important;
+        color: #F8FAFC !important;
+        border: 1.5px solid #334155 !important;
+        border-radius: 8px !important;
+        font-size: 13.5px !important;
+    }
+    div[data-baseweb="textarea"]:focus-within,
+    div[data-testid="stTextArea"] textarea:focus {
+        border-color: #3B82F6 !important;
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.4) !important;
+    }
+    div[data-baseweb="input"],
+    div[data-testid="stTextInput"] input {
+        background-color: #0F172A !important;
+        color: #F8FAFC !important;
+        border: 1.5px solid #334155 !important;
+        border-radius: 8px !important;
+    }
+    div[data-baseweb="input"]:focus-within,
+    div[data-testid="stTextInput"] input:focus {
+        border-color: #3B82F6 !important;
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.4) !important;
+    }
+    
+    /* Desplegables Selectbox Legibles */
     div[data-baseweb="select"] {
         border: 1.5px solid #334155 !important;
         border-radius: 8px !important;
@@ -301,7 +323,7 @@ if "Exportaciones" in operacion_seleccionada:
     st.markdown("""
     <div class="operation-banner">
         <div class="operation-title">🚢 Mesa de Exportaciones | Análisis Técnico & Auditoría Documental</div>
-        <div class="operation-desc">Encuadre legal de cobros (B01 vs B02), plazos de liquidación según NCM y régimen informativo SECOEXPO (Comunicación "A" 6808 BCRA).</div>
+        <div class="operation-desc">Encuadre legal de cobros (B01 vs B02), plazos de liquidación según NCM, consolidación de múltiples permisos y régimen SECOEXPO (Com. "A" 6808 BCRA).</div>
     </div>
     """, unsafe_allow_html=True)
     
@@ -313,6 +335,13 @@ if "Exportaciones" in operacion_seleccionada:
     with col_relev:
         st.markdown('<div class="section-title">📝 1. Relevamiento de la Operación de Exportación</div>', unsafe_allow_html=True)
         
+        # Datos de la Empresa
+        c_emp_ex, c_cuit_ex = st.columns([1.4, 1])
+        with c_emp_ex:
+            empresa_expo = st.text_input("Razón Social del Exportador:", value="Exportadora Argentina S.A.", key="emp_exp")
+        with c_cuit_ex:
+            cuit_expo = st.text_input("CUIT de la Empresa:", value="30-71234567-9", key="cuit_exp")
+            
         momento_fondos_label = st.radio(
             "¿En qué momento ingresan o se liquidan las divisas del exterior?",
             [
@@ -336,7 +365,7 @@ if "Exportaciones" in operacion_seleccionada:
         
         c_monto, c_fecha = st.columns(2)
         with c_monto:
-            monto_expo = st.number_input("Monto a liquidar (USD):", value=65000.0, step=5000.0)
+            monto_expo = st.number_input("Monto total a liquidar (USD):", value=65000.0, step=5000.0)
         with c_fecha:
             if es_anticipo:
                 fecha_expo = st.date_input("Fecha estimada de cobro del anticipo:", value=date.today())
@@ -363,70 +392,166 @@ if "Exportaciones" in operacion_seleccionada:
             vinculada = st.checkbox("¿La venta se realiza a una empresa vinculada en el exterior?", value=(cat_ncm == "EMPRESAS_VINCULADAS"))
             
         st.markdown("---")
-        st.markdown('<div class="section-title">📂 2. Carga de Documentación Probatoria (Legajo Digital)</div>', unsafe_allow_html=True)
-        st.caption("Cargá los archivos digitalizados correspondientes a cada campo para auditar la solidez del legajo:")
+        st.markdown('<div class="section-title">📂 2. Carga de Documentación Probatoria (Carga Masiva y Legajo Digital)</div>', unsafe_allow_html=True)
+        st.caption("Podés declarar múltiples permisos y facturas correspondientes a una operación consolidada y adjuntar múltiples archivos digitalizados a la vez:")
         
         archivos_adjuntos = []
+        declared_docs = {}
         
         if not es_anticipo:
-            # 1. Permiso de Embarque
-            c_pe_txt, c_pe_file = st.columns([1, 1.2])
+            # 1. Permiso(s) de Embarque (Soporte Masivo)
+            c_pe_txt, c_pe_file = st.columns([1.1, 1.2])
             with c_pe_txt:
-                pe_num = st.text_input("N° Permiso de Embarque (SIM):", value="26001EC01004567A")
+                pe_raw = st.text_area(
+                    "N° de Permiso(s) de Embarque (SIM):",
+                    value="26001EC01004567A\n26001EC01004568B",
+                    height=85,
+                    help="Ingresá uno por línea o separados por coma si la operación ampara más de un permiso.",
+                    key="pe_raw"
+                )
+                pe_list = [p.strip() for p in pe_raw.replace(",", "\n").splitlines() if p.strip()]
+                declared_docs["Permisos de Embarque SIM"] = pe_list
+                if pe_list:
+                    st.caption(f"📑 **{len(pe_list)} Permiso(s) declarado(s):** " + ", ".join(f"`{p}`" for p in pe_list))
+                else:
+                    st.caption("⚠️ No se ingresaron números de permiso.")
             with c_pe_file:
-                pe_upload = st.file_uploader("📎 Adjuntar Permiso SIM (.pdf/.jpg):", type=["pdf", "jpg", "png"], key="up_pe")
+                pe_uploads = st.file_uploader(
+                    "📎 Adjuntar Permiso(s) SIM (.pdf/.jpg) [Múltiples]:",
+                    type=["pdf", "jpg", "png"],
+                    accept_multiple_files=True,
+                    key="up_pe_multi",
+                    help="Podés seleccionar o arrastrar todos los permisos digitalizados a la vez."
+                )
+                pe_files = [f.name for f in pe_uploads] if pe_uploads else []
                 archivos_adjuntos.append({
-                    "name": f"Permiso de Embarque SIM N° {pe_num}",
-                    "attached": pe_upload is not None,
-                    "filename": pe_upload.name if pe_upload else None
+                    "name": f"Permisos de Embarque SIM ({len(pe_list)} declarados)",
+                    "attached": len(pe_files) > 0,
+                    "count": len(pe_files),
+                    "expected": len(pe_list),
+                    "filename": ", ".join(pe_files) if pe_files else None
                 })
                 
-            # 2. Factura de Exportación E
-            c_fac_txt, c_fac_file = st.columns([1, 1.2])
+            # 2. Factura(s) de Exportación E (Soporte Masivo)
+            c_fac_txt, c_fac_file = st.columns([1.1, 1.2])
             with c_fac_txt:
-                fac_num = st.text_input("N° Factura Electrónica 'E':", value="00001-00000456")
+                fac_raw = st.text_area(
+                    "N° de Factura(s) Electrónica(s) 'E':",
+                    value="00001-00000456\n00001-00000457",
+                    height=85,
+                    help="Ingresá una por línea o separadas por coma.",
+                    key="fac_raw"
+                )
+                fac_list = [f.strip() for f in fac_raw.replace(",", "\n").splitlines() if f.strip()]
+                declared_docs["Facturas Electrónicas 'E'"] = fac_list
+                if fac_list:
+                    st.caption(f"🧾 **{len(fac_list)} Factura(s) declarada(s):** " + ", ".join(f"`{f}`" for f in fac_list))
+                else:
+                    st.caption("⚠️ No se ingresaron números de factura.")
             with c_fac_file:
-                fac_upload = st.file_uploader("📎 Adjuntar Factura 'E' (.pdf):", type=["pdf"], key="up_fac")
+                fac_uploads = st.file_uploader(
+                    "📎 Adjuntar Factura(s) 'E' (.pdf) [Múltiples]:",
+                    type=["pdf"],
+                    accept_multiple_files=True,
+                    key="up_fac_multi",
+                    help="Podés arrastrar o seleccionar todas las facturas 'E'."
+                )
+                fac_files = [f.name for f in fac_uploads] if fac_uploads else []
                 archivos_adjuntos.append({
-                    "name": f"Factura Electrónica 'E' N° {fac_num}",
-                    "attached": fac_upload is not None,
-                    "filename": fac_upload.name if fac_upload else None
+                    "name": f"Facturas Electrónicas 'E' ({len(fac_list)} declaradas)",
+                    "attached": len(fac_files) > 0,
+                    "count": len(fac_files),
+                    "expected": len(fac_list),
+                    "filename": ", ".join(fac_files) if fac_files else None
                 })
                 
-            # 3. Documento de Transporte
-            c_bl_txt, c_bl_file = st.columns([1, 1.2])
+            # 3. Documento(s) de Transporte
+            c_bl_txt, c_bl_file = st.columns([1.1, 1.2])
             with c_bl_txt:
-                bl_num = st.text_input("Doc. Transporte (B/L, CRT o AWB):", value="BL-MEDU-9876543")
+                bl_raw = st.text_area(
+                    "Doc(s). de Transporte (B/L, CRT o AWB):",
+                    value="BL-MEDU-9876543",
+                    height=68,
+                    help="Uno por línea si hay varios conocimientos de embarque.",
+                    key="bl_raw"
+                )
+                bl_list = [b.strip() for b in bl_raw.replace(",", "\n").splitlines() if b.strip()]
+                declared_docs["Documentos de Transporte"] = bl_list
+                if bl_list:
+                    st.caption(f"🚢 **{len(bl_list)} Documento(s) declarado(s):** " + ", ".join(f"`{b}`" for b in bl_list))
             with c_bl_file:
-                bl_upload = st.file_uploader("📎 Adjuntar Doc. Transporte (.pdf):", type=["pdf"], key="up_bl")
+                bl_uploads = st.file_uploader(
+                    "📎 Adjuntar Doc(s). Transporte (.pdf) [Múltiples]:",
+                    type=["pdf"],
+                    accept_multiple_files=True,
+                    key="up_bl_multi"
+                )
+                bl_files = [f.name for f in bl_uploads] if bl_uploads else []
                 archivos_adjuntos.append({
-                    "name": f"Conocimiento de Transporte {bl_num}",
-                    "attached": bl_upload is not None,
-                    "filename": bl_upload.name if bl_upload else None
+                    "name": f"Documentos de Transporte ({len(bl_list)} declarados)",
+                    "attached": len(bl_files) > 0,
+                    "count": len(bl_files),
+                    "expected": len(bl_list),
+                    "filename": ", ".join(bl_files) if bl_files else None
                 })
         else:
-            # 1. Proforma u Orden de Compra
-            c_prof_txt, c_prof_file = st.columns([1, 1.2])
+            # 1. Proforma(s) u Orden(es) de Compra
+            c_prof_txt, c_prof_file = st.columns([1.1, 1.2])
             with c_prof_txt:
-                prof_num = st.text_input("N° Proforma u Orden de Compra:", value="PI-2026-EXPO-098")
+                prof_raw = st.text_area(
+                    "N° Proforma(s) u Orden(es) de Compra:",
+                    value="PI-2026-EXPO-098",
+                    height=68,
+                    help="Una por línea si hay varias proformas vinculadas.",
+                    key="prof_raw"
+                )
+                prof_list = [p.strip() for p in prof_raw.replace(",", "\n").splitlines() if p.strip()]
+                declared_docs["Proformas / Órdenes"] = prof_list
+                if prof_list:
+                    st.caption(f"📋 **{len(prof_list)} Proforma(s) declarada(s):** " + ", ".join(f"`{p}`" for p in prof_list))
             with c_prof_file:
-                prof_upload = st.file_uploader("📎 Adjuntar Factura Proforma (.pdf):", type=["pdf"], key="up_prof")
+                prof_uploads = st.file_uploader(
+                    "📎 Adjuntar Factura(s) Proforma (.pdf) [Múltiples]:",
+                    type=["pdf"],
+                    accept_multiple_files=True,
+                    key="up_prof_multi"
+                )
+                prof_files = [f.name for f in prof_uploads] if prof_uploads else []
                 archivos_adjuntos.append({
-                    "name": f"Factura Proforma N° {prof_num}",
-                    "attached": prof_upload is not None,
-                    "filename": prof_upload.name if prof_upload else None
+                    "name": f"Facturas Proforma ({len(prof_list)} declaradas)",
+                    "attached": len(prof_files) > 0,
+                    "count": len(prof_files),
+                    "expected": len(prof_list),
+                    "filename": ", ".join(prof_files) if prof_files else None
                 })
                 
             # 2. Contrato Comercial o Pedido
-            c_cont_txt, c_cont_file = st.columns([1, 1.2])
+            c_cont_txt, c_cont_file = st.columns([1.1, 1.2])
             with c_cont_txt:
-                cont_num = st.text_input("Referencia Contrato / Pedido:", value="PO-BUYER-USA-441")
+                cont_raw = st.text_area(
+                    "Referencia Contrato(s) / Pedido(s):",
+                    value="PO-BUYER-USA-441",
+                    height=68,
+                    key="cont_raw"
+                )
+                cont_list = [c.strip() for c in cont_raw.replace(",", "\n").splitlines() if c.strip()]
+                declared_docs["Contratos / Pedidos"] = cont_list
+                if cont_list:
+                    st.caption(f"📄 **{len(cont_list)} Referencia(s) declarada(s):** " + ", ".join(f"`{c}`" for c in cont_list))
             with c_cont_file:
-                cont_upload = st.file_uploader("📎 Adjuntar Contrato / Pedido (.pdf):", type=["pdf"], key="up_cont")
+                cont_uploads = st.file_uploader(
+                    "📎 Adjuntar Contrato(s) / Pedido(s) (.pdf) [Múltiples]:",
+                    type=["pdf"],
+                    accept_multiple_files=True,
+                    key="up_cont_multi"
+                )
+                cont_files = [f.name for f in cont_uploads] if cont_uploads else []
                 archivos_adjuntos.append({
-                    "name": f"Contrato Comercial {cont_num}",
-                    "attached": cont_upload is not None,
-                    "filename": cont_upload.name if cont_upload else None
+                    "name": f"Contratos / Pedidos ({len(cont_list)} declarados)",
+                    "attached": len(cont_files) > 0,
+                    "count": len(cont_files),
+                    "expected": len(cont_list),
+                    "filename": ", ".join(cont_files) if cont_files else None
                 })
 
     # --------------------------------------------------------------------------
@@ -483,20 +608,27 @@ if "Exportaciones" in operacion_seleccionada:
                 f_limite_str = f_limite.strftime("%d/%m/%Y") if hasattr(f_limite, "strftime") else str(f_limite)
                 st.metric("Fecha Límite Exigible:", f_limite_str)
                 
-        # Auditoría del Legajo Documental Adjunto
+        # Auditoría del Legajo Documental Adjunto (Múltiples Archivos / Carga Masiva)
         st.markdown("---")
-        st.markdown("**Auditoría del Legajo Digital Aportado:**")
+        st.markdown("**Auditoría del Legajo Digital y Comprobantes Adjuntados:**")
         docs_adjuntados_count = sum(1 for a in archivos_adjuntos if a["attached"])
         total_docs_count = len(archivos_adjuntos)
+        total_files_uploaded = sum(a.get("count", 0) for a in archivos_adjuntos)
         
         st.progress(docs_adjuntados_count / max(total_docs_count, 1))
-        st.caption(f"Solidez del Legajo: {docs_adjuntados_count} de {total_docs_count} documentos verificados.")
+        st.caption(f"Solidez del Legajo: {docs_adjuntados_count} de {total_docs_count} categorías respaldadas ({total_files_uploaded} archivos cargados en total).")
         
         for item in archivos_adjuntos:
+            cat_name = item["name"]
+            att_count = item.get("count", 0)
+            exp_count = item.get("expected", 1)
             if item["attached"]:
-                st.markdown(f"✅ <span class='doc-ok'>{item['name']}:</span> Archivo adjunto (`{item['filename']}`)", unsafe_allow_html=True)
+                if att_count >= exp_count:
+                    st.markdown(f"✅ <span class='doc-ok'>{cat_name}:</span> {att_count} archivo(s) digitalizado(s) adjunto(s) (`{item['filename']}`)", unsafe_allow_html=True)
+                else:
+                    st.markdown(f"⚠️ <span class='doc-pending'>{cat_name}:</span> {att_count} de {exp_count} archivos adjuntos (Faltan {exp_count - att_count}) (`{item['filename']}`)", unsafe_allow_html=True)
             else:
-                st.markdown(f"⏳ <span class='doc-pending'>{item['name']}:</span> Pendiente de carga", unsafe_allow_html=True)
+                st.markdown(f"⏳ <span class='doc-pending'>{cat_name}:</span> 0 de {exp_count} archivos cargados (Pendiente de adjuntar)", unsafe_allow_html=True)
                 
         # Fundamento Normativo
         with st.expander("📖 **Fundamento Normativo: Régimen Informativo SECOEXPO (Com. 'A' 6808 BCRA)**", expanded=True):
@@ -505,19 +637,21 @@ if "Exportaciones" in operacion_seleccionada:
         # Botón de Descarga de Dictamen en PDF
         st.divider()
         pdf_bytes_exp = generate_dictamen_tecnico_pdf(
-            company_name="Empresa Titular",
-            cuit="CUIT Operativo",
+            company_name=empresa_expo,
+            cuit=cuit_expo,
             operation_type="EXPORTACIÓN DE BIENES",
             diagnosis_data=diag_expo,
             signer_name="Consultor Responsable",
             signer_role="Asesor Normativo Comex",
-            attached_files=archivos_adjuntos
+            attached_files=archivos_adjuntos,
+            declared_documents=declared_docs
         )
         
+        clean_cuit_exp = cuit_expo.replace("-", "").strip()
         st.download_button(
             label="📥 Descargar Dictamen Técnico de Exportación (PDF)",
             data=pdf_bytes_exp,
-            file_name=f"Dictamen_Expo_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
+            file_name=f"Dictamen_Expo_{clean_cuit_exp}_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
             mime="application/pdf",
             use_container_width=True
         )
@@ -530,7 +664,7 @@ else:
     st.markdown("""
     <div class="operation-banner">
         <div class="operation-title">📦 Mesa de Importaciones | Encuadre Normativo & Acceso al MLC</div>
-        <div class="operation-desc">Evaluación de transferencias al exterior (B05 / B07 / B06 / B12), candados bursátiles (Empresa + Socios) y validaciones cruzadas ARCA.</div>
+        <div class="operation-desc">Evaluación de transferencias al exterior (B05 / B07 / B06 / B12), consolidación de despachos y facturas, candados bursátiles y validaciones ARCA.</div>
     </div>
     """, unsafe_allow_html=True)
     
@@ -539,6 +673,13 @@ else:
     with col_relev_im:
         st.markdown('<div class="section-title">📝 1. Relevamiento Operativo y Estado de Mercadería</div>', unsafe_allow_html=True)
         
+        # Datos de la Empresa
+        c_emp_im, c_cuit_im = st.columns([1.4, 1])
+        with c_emp_im:
+            empresa_impo = st.text_input("Razón Social del Importador:", value="Importadora Industrial S.A.", key="emp_im")
+        with c_cuit_im:
+            cuit_impo = st.text_input("CUIT de la Empresa:", value="30-79876543-1", key="cuit_im")
+            
         estado_label = st.radio(
             "Estado físico de la mercadería importada:",
             [
@@ -570,47 +711,137 @@ else:
         
         c_monto_im, c_fecha_im = st.columns(2)
         with c_monto_im:
-            monto_impo = st.number_input("Monto a transferir (USD):", value=45000.0, step=5000.0, key="m_impo")
+            monto_impo = st.number_input("Monto total a transferir (USD):", value=45000.0, step=5000.0, key="m_impo")
         with c_fecha_im:
             fecha_giro_impo = st.date_input("Fecha estimada de giro:", value=date.today(), key="f_impo")
             
         st.markdown("---")
-        st.markdown('<div class="section-title">📂 2. Carga de Documentación de Importación</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">📂 2. Carga de Documentación de Importación (Carga Masiva y Legajo Digital)</div>', unsafe_allow_html=True)
+        st.caption("Podés declarar múltiples facturas, B/Ls, despachos y SEDIs para operaciones consolidadas y adjuntar múltiples archivos:")
         
         archivos_impo = []
+        declared_docs_im = {}
         
-        # Factura Comercial / Proforma
-        c_fac_im, c_fac_up = st.columns([1, 1.2])
+        # Factura(s) Exterior
+        c_fac_im, c_fac_up = st.columns([1.1, 1.2])
         with c_fac_im:
-            num_fac_im = st.text_input("N° Factura Exterior:", value="INV-EXT-2026-99")
+            fac_im_raw = st.text_area(
+                "N° Factura(s) Exterior (Proforma o Comercial):",
+                value="INV-EXT-2026-99\nINV-EXT-2026-100",
+                height=85,
+                help="Una por línea o separadas por coma.",
+                key="fac_im_raw"
+            )
+            fac_im_list = [f.strip() for f in fac_im_raw.replace(",", "\n").splitlines() if f.strip()]
+            declared_docs_im["Facturas del Exterior"] = fac_im_list
+            if fac_im_list:
+                st.caption(f"🧾 **{len(fac_im_list)} Factura(s) declarada(s):** " + ", ".join(f"`{f}`" for f in fac_im_list))
         with c_fac_up:
-            up_fac_im = st.file_uploader("📎 Factura Exterior (.pdf):", type=["pdf"], key="up_fac_im")
-            archivos_impo.append({"name": f"Factura Exterior {num_fac_im}", "attached": up_fac_im is not None, "filename": up_fac_im.name if up_fac_im else None})
+            up_fac_im = st.file_uploader(
+                "📎 Factura(s) Exterior (.pdf) [Múltiples]:",
+                type=["pdf"],
+                accept_multiple_files=True,
+                key="up_fac_im_multi"
+            )
+            fac_im_files = [f.name for f in up_fac_im] if up_fac_im else []
+            archivos_impo.append({
+                "name": f"Facturas del Exterior ({len(fac_im_list)} declaradas)",
+                "attached": len(fac_im_files) > 0,
+                "count": len(fac_im_files),
+                "expected": len(fac_im_list),
+                "filename": ", ".join(fac_im_files) if fac_im_files else None
+            })
             
-        # Doc de Transporte o Despacho
+        # Doc(s) de Transporte o Despacho
         if estado_impo in ["EN_VIAJE", "NACIONALIZADA"]:
-            c_bl_im, c_bl_up = st.columns([1, 1.2])
+            c_bl_im, c_bl_up = st.columns([1.1, 1.2])
             with c_bl_im:
-                num_bl_im = st.text_input("N° Conocimiento de Embarque (B/L):", value="MEDU98765432")
+                bl_im_raw = st.text_area(
+                    "N° Conocimiento(s) de Embarque (B/L, CRT, AWB):",
+                    value="MEDU98765432",
+                    height=68,
+                    help="Uno por línea si hay múltiples conocimientos de embarque.",
+                    key="bl_im_raw"
+                )
+                bl_im_list = [b.strip() for b in bl_im_raw.replace(",", "\n").splitlines() if b.strip()]
+                declared_docs_im["Documentos de Transporte B/L"] = bl_im_list
+                if bl_im_list:
+                    st.caption(f"🚢 **{len(bl_im_list)} B/L(s) declarado(s):** " + ", ".join(f"`{b}`" for b in bl_im_list))
             with c_bl_up:
-                up_bl_im = st.file_uploader("📎 Conocimiento de Embarque B/L (.pdf):", type=["pdf"], key="up_bl_im")
-                archivos_impo.append({"name": f"Conocimiento de Embarque B/L {num_bl_im}", "attached": up_bl_im is not None, "filename": up_bl_im.name if up_bl_im else None})
+                up_bl_im = st.file_uploader(
+                    "📎 Conocimiento(s) de Embarque B/L (.pdf) [Múltiples]:",
+                    type=["pdf"],
+                    accept_multiple_files=True,
+                    key="up_bl_im_multi"
+                )
+                bl_im_files = [f.name for f in up_bl_im] if up_bl_im else []
+                archivos_impo.append({
+                    "name": f"Conocimientos de Embarque B/L ({len(bl_im_list)} declarados)",
+                    "attached": len(bl_im_files) > 0,
+                    "count": len(bl_im_files),
+                    "expected": len(bl_im_list),
+                    "filename": ", ".join(bl_im_files) if bl_im_files else None
+                })
                 
         if estado_impo == "NACIONALIZADA":
-            c_desp_im, c_desp_up = st.columns([1, 1.2])
+            c_desp_im, c_desp_up = st.columns([1.1, 1.2])
             with c_desp_im:
-                num_desp = st.text_input("N° Despacho de Importación SIM:", value="26001IC04001234A")
+                desp_raw = st.text_area(
+                    "N° Despacho(s) de Importación SIM:",
+                    value="26001IC04001234A\n26001IC04001235B",
+                    height=85,
+                    help="Uno por línea si se cancelan varios despachos a plaza.",
+                    key="desp_raw"
+                )
+                desp_list = [d.strip() for d in desp_raw.replace(",", "\n").splitlines() if d.strip()]
+                declared_docs_im["Despachos de Importación SIM"] = desp_list
+                if desp_list:
+                    st.caption(f"📑 **{len(desp_list)} Despacho(s) declarado(s):** " + ", ".join(f"`{d}`" for d in desp_list))
             with c_desp_up:
-                up_desp = st.file_uploader("📎 Despacho SIM Oficializado (.pdf):", type=["pdf"], key="up_desp")
-                archivos_impo.append({"name": f"Despacho SIM {num_desp}", "attached": up_desp is not None, "filename": up_desp.name if up_desp else None})
+                up_desp = st.file_uploader(
+                    "📎 Despacho(s) SIM Oficializado(s) (.pdf) [Múltiples]:",
+                    type=["pdf"],
+                    accept_multiple_files=True,
+                    key="up_desp_multi"
+                )
+                desp_files = [f.name for f in up_desp] if up_desp else []
+                archivos_impo.append({
+                    "name": f"Despachos SIM Oficializados ({len(desp_list)} declarados)",
+                    "attached": len(desp_files) > 0,
+                    "count": len(desp_files),
+                    "expected": len(desp_list),
+                    "filename": ", ".join(desp_files) if desp_files else None
+                })
                 
-        # Constancia SEDI
-        c_sedi_im, c_sedi_up = st.columns([1, 1.2])
+        # Constancia(s) SEDI
+        c_sedi_im, c_sedi_up = st.columns([1.1, 1.2])
         with c_sedi_im:
-            num_sedi = st.text_input("N° Declaración SEDI:", value="SEDI-2026-004455")
+            sedi_raw = st.text_area(
+                "N° Declaración(es) SEDI:",
+                value="SEDI-2026-004455",
+                height=68,
+                help="Una por línea si hay múltiples declaraciones SEDI.",
+                key="sedi_raw"
+            )
+            sedi_list = [s.strip() for s in sedi_raw.replace(",", "\n").splitlines() if s.strip()]
+            declared_docs_im["Declaraciones SEDI"] = sedi_list
+            if sedi_list:
+                st.caption(f"📄 **{len(sedi_list)} SEDI(s) declarada(s):** " + ", ".join(f"`{s}`" for s in sedi_list))
         with c_sedi_up:
-            up_sedi = st.file_uploader("📎 Constancia SEDI en estado SALIDA (.pdf):", type=["pdf"], key="up_sedi")
-            archivos_impo.append({"name": f"Constancia SEDI {num_sedi}", "attached": up_sedi is not None, "filename": up_sedi.name if up_sedi else None})
+            up_sedi = st.file_uploader(
+                "📎 Constancia(s) SEDI en estado SALIDA (.pdf) [Múltiples]:",
+                type=["pdf"],
+                accept_multiple_files=True,
+                key="up_sedi_multi"
+            )
+            sedi_files = [f.name for f in up_sedi] if up_sedi else []
+            archivos_impo.append({
+                "name": f"Constancias SEDI ({len(sedi_list)} declaradas)",
+                "attached": len(sedi_files) > 0,
+                "count": len(sedi_files),
+                "expected": len(sedi_list),
+                "filename": ", ".join(sedi_files) if sedi_files else None
+            })
             
         st.markdown("---")
         st.markdown('<div class="section-title">🔒 3. Auditoría de Candados Cruzados (BCRA + ARCA)</div>', unsafe_allow_html=True)
@@ -687,19 +918,27 @@ else:
             for o in diag_impo["observaciones"]:
                 st.markdown(f"* **{o['origen']}:** {o['detalle']}")
                 
-        # Auditoría de Legajo
+        # Auditoría de Legajo (Cargas Masivas)
         st.markdown("---")
-        st.markdown("**Auditoría del Legajo Digital Aportado:**")
+        st.markdown("**Auditoría del Legajo Digital y Comprobantes Adjuntados:**")
         docs_impo_count = sum(1 for a in archivos_impo if a["attached"])
         total_impo_count = len(archivos_impo)
+        total_files_impo = sum(a.get("count", 0) for a in archivos_impo)
+        
         st.progress(docs_impo_count / max(total_impo_count, 1))
-        st.caption(f"Solidez del Legajo: {docs_impo_count} de {total_impo_count} documentos cargados.")
+        st.caption(f"Solidez del Legajo: {docs_impo_count} de {total_impo_count} categorías respaldadas ({total_files_impo} archivos cargados en total).")
         
         for item in archivos_impo:
+            cat_name = item["name"]
+            att_count = item.get("count", 0)
+            exp_count = item.get("expected", 1)
             if item["attached"]:
-                st.markdown(f"✅ <span class='doc-ok'>{item['name']}:</span> Archivo adjunto (`{item['filename']}`)", unsafe_allow_html=True)
+                if att_count >= exp_count:
+                    st.markdown(f"✅ <span class='doc-ok'>{cat_name}:</span> {att_count} archivo(s) digitalizado(s) adjunto(s) (`{item['filename']}`)", unsafe_allow_html=True)
+                else:
+                    st.markdown(f"⚠️ <span class='doc-pending'>{cat_name}:</span> {att_count} de {exp_count} archivos adjuntos (Faltan {exp_count - att_count}) (`{item['filename']}`)", unsafe_allow_html=True)
             else:
-                st.markdown(f"⏳ <span class='doc-pending'>{item['name']}:</span> Pendiente de carga", unsafe_allow_html=True)
+                st.markdown(f"⏳ <span class='doc-pending'>{cat_name}:</span> 0 de {exp_count} archivos cargados (Pendiente de adjuntar)", unsafe_allow_html=True)
                 
         with st.expander("📖 **Fundamento Normativo BCRA & Plazo SEPAIMPO**", expanded=True):
             st.write(diag_impo["fundamento_normativo"])
@@ -708,19 +947,21 @@ else:
                 
         st.divider()
         pdf_bytes_im = generate_dictamen_tecnico_pdf(
-            company_name="Empresa Titular",
-            cuit="CUIT Operativo",
+            company_name=empresa_impo,
+            cuit=cuit_impo,
             operation_type="IMPORTACIÓN DE BIENES",
             diagnosis_data=diag_impo,
             signer_name="Consultor Responsable",
             signer_role="Asesor Normativo Comex",
-            attached_files=archivos_impo
+            attached_files=archivos_impo,
+            declared_documents=declared_docs_im
         )
         
+        clean_cuit_im = cuit_impo.replace("-", "").strip()
         st.download_button(
             label="📥 Descargar Dictamen Técnico de Importación (PDF)",
             data=pdf_bytes_im,
-            file_name=f"Dictamen_Impo_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
+            file_name=f"Dictamen_Impo_{clean_cuit_im}_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
             mime="application/pdf",
             use_container_width=True
         )

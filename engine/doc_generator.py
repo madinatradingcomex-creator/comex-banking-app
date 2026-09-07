@@ -1,6 +1,73 @@
 from datetime import datetime
 import io
 
+def sanitize_pdf_text(text):
+    """
+    Sanitiza el texto eliminando emojis y caracteres especiales incompatibles con
+    fuentes estándar de FPDF (Latin-1 / ISO-8859-1), reemplazándolos por etiquetas
+    legibles y profesionales.
+    """
+    if not text:
+        return ""
+    if not isinstance(text, str):
+        text = str(text)
+        
+    replacements = {
+        # Semáforos y estados
+        "🟢": "[VIABLE]",
+        "🟡": "[OBSERVADO]",
+        "🔴": "[BLOQUEADO]",
+        "🚨": "[ALERTA]",
+        "⚠️": "[ADVERTENCIA]",
+        "✅": "[ADJUNTADO]",
+        "⏳": "[PENDIENTE]",
+        "📌": "[*]",
+        "📖": "[NORMATIVA]",
+        "📂": "[LEGAJO]",
+        "🏭": "[MOI/PyME]",
+        "🥩": "[ALIMENTOS]",
+        "🌾": "[GRANOS]",
+        "🔗": "[VINCULADAS]",
+        "⚖️": "[DICTAMEN]",
+        "🚢": "[EXPO]",
+        "📦": "[IMPO]",
+        "🔒": "[CANDADO]",
+        "🛡️": "[SEGURIDAD]",
+        "🧾": "[FACTURA]",
+        "📑": "[PERMISO]",
+        "📝": "[REGISTRO]",
+        "🏢": "[EMPRESA]",
+        "🏦": "[BANCO]",
+        "🏷️": "[DOC]",
+        "❌": "[NO]",
+        "✔️": "[SI]",
+        
+        # Símbolos tipográficos
+        "—": "-",
+        "–": "-",
+        "“": '"',
+        "”": '"',
+        "‘": "'",
+        "’": "'",
+        "«": '"',
+        "»": '"',
+        "…": "...",
+        "°": "o.",
+        "º": "o.",
+        "ª": "a.",
+        "•": "*",
+        "·": "*",
+        "\u200b": "",
+        "\xa0": " "
+    }
+    
+    for k, v in replacements.items():
+        text = text.replace(k, v)
+        
+    # latin-1 replace convierte cualquier carácter Unicode restante a '?'
+    return text.encode("latin-1", "replace").decode("latin-1")
+
+
 def generate_text_document(title, ref_text, body_paragraphs, company_name, cuit, bank_name, signer_name, signer_role):
     today_str = datetime.now().strftime("%d de %B de %Y")
     text = f"""================================================================================
@@ -28,27 +95,41 @@ ________________________________________
 """
     return text.encode("utf-8")
 
+
 def build_pdf_document(title, ref_text, body_paragraphs, company_name, cuit, bank_name, signer_name, signer_role):
+    title = sanitize_pdf_text(title)
+    ref_text = sanitize_pdf_text(ref_text)
+    company_name = sanitize_pdf_text(company_name)
+    cuit = sanitize_pdf_text(cuit)
+    bank_name = sanitize_pdf_text(bank_name)
+    signer_name = sanitize_pdf_text(signer_name)
+    signer_role = sanitize_pdf_text(signer_role)
+    clean_paragraphs = [sanitize_pdf_text(p) for p in body_paragraphs]
+    
     try:
         from fpdf import FPDF
         
         class ComexPDF(FPDF):
+            def __init__(self, doc_header_title="CONSULTORIA BANCARIA Y CAMBIARIA", *args, **kwargs):
+                super().__init__(*args, **kwargs)
+                self.doc_header_title = sanitize_pdf_text(doc_header_title)
+
             def header(self):
-                self.set_font("Helvetica", "B", 11)
-                self.set_text_color(15, 23, 42)
-                self.cell(0, 8, "NOTA FORMAL DE COMERCIO EXTERIOR Y CAMBIOS", border=False, align="R")
-                self.ln(4)
+                self.set_font("Helvetica", "B", 10)
+                self.set_text_color(30, 41, 59)
+                self.cell(0, 7, self.doc_header_title, border=False, align="R")
+                self.ln(2)
                 self.set_draw_color(203, 213, 225)
-                self.line(10, 18, 200, 18)
-                self.ln(10)
+                self.line(10, 16, 200, 16)
+                self.ln(8)
 
             def footer(self):
                 self.set_y(-18)
                 self.set_font("Helvetica", "I", 8)
                 self.set_text_color(148, 163, 184)
-                self.cell(0, 10, f"Generado conforme normativa BCRA de Exterior y Cambios | Pagina {self.page_no()}", align="C")
+                self.cell(0, 10, f"Consultoria Bancaria y Cambiaria | BCRA & ARCA | Pagina {self.page_no()}", align="C")
 
-        pdf = ComexPDF(orientation="P", unit="mm", format="A4")
+        pdf = ComexPDF(orientation="P", unit="mm", format="A4", doc_header_title=title)
         pdf.set_auto_page_break(auto=True, margin=20)
         pdf.add_page()
         
@@ -56,28 +137,28 @@ def build_pdf_document(title, ref_text, body_paragraphs, company_name, cuit, ban
         pdf.set_text_color(30, 41, 59)
         today_str = datetime.now().strftime("%d de %B de %Y")
         pdf.cell(0, 6, f"Buenos Aires, {today_str}", align="R")
-        pdf.ln(8)
+        pdf.ln(6)
         
         pdf.set_font("Helvetica", "B", 10)
         pdf.cell(0, 5, "Senores de la Mesa de Comercio Exterior y Cambios", ln=True)
         pdf.cell(0, 5, f"{bank_name.upper()}", ln=True)
         pdf.set_font("Helvetica", "", 10)
         pdf.cell(0, 5, "Presente.-", ln=True)
-        pdf.ln(6)
+        pdf.ln(5)
         
         pdf.set_font("Helvetica", "B", 10)
         pdf.set_fill_color(241, 245, 249)
         pdf.multi_cell(0, 7, f"REF: {ref_text}", fill=True, border="L")
-        pdf.ln(6)
+        pdf.ln(5)
         
-        pdf.set_font("Helvetica", "", 10)
-        for p in body_paragraphs:
-            pdf.multi_cell(0, 6, p)
-            pdf.ln(4)
+        pdf.set_font("Helvetica", "", 9.5)
+        for p in clean_paragraphs:
+            pdf.multi_cell(0, 5.5, p)
+            pdf.ln(3.5)
             
-        pdf.ln(8)
-        pdf.multi_cell(0, 6, "Sin otro particular, saluda a Uds. muy atentamente,")
-        pdf.ln(18)
+        pdf.ln(6)
+        pdf.multi_cell(0, 5.5, "Sin otro particular, saluda a Uds. muy atentamente,")
+        pdf.ln(14)
         
         pdf.set_font("Helvetica", "B", 10)
         pdf.cell(90, 5, "________________________________________", ln=True)
@@ -85,8 +166,30 @@ def build_pdf_document(title, ref_text, body_paragraphs, company_name, cuit, ban
         pdf.cell(90, 5, f"{company_name} (CUIT: {cuit})", ln=True)
         
         return bytes(pdf.output()), "pdf"
-    except Exception:
-        return generate_text_document(title, ref_text, body_paragraphs, company_name, cuit, bank_name, signer_name, signer_role), "txt"
+    except Exception as e:
+        print("FPDF Error (attempting fallback):", e)
+        try:
+            from fpdf import FPDF
+            fallback_pdf = FPDF()
+            fallback_pdf.set_auto_page_break(auto=True, margin=20)
+            fallback_pdf.add_page()
+            fallback_pdf.set_font("Helvetica", "B", 13)
+            fallback_pdf.cell(0, 10, title, ln=True)
+            fallback_pdf.set_font("Helvetica", "B", 10)
+            fallback_pdf.multi_cell(0, 6, f"REF: {ref_text}")
+            fallback_pdf.ln(4)
+            fallback_pdf.set_font("Helvetica", "", 9.5)
+            for p in clean_paragraphs:
+                fallback_pdf.multi_cell(0, 5.5, p)
+                fallback_pdf.ln(3)
+            fallback_pdf.ln(6)
+            fallback_pdf.set_font("Helvetica", "B", 10)
+            fallback_pdf.cell(0, 5, f"{signer_name} - {signer_role} | {company_name} (CUIT: {cuit})", ln=True)
+            return bytes(fallback_pdf.output()), "pdf"
+        except Exception as e2:
+            print("Fallback PDF error:", e2)
+            return generate_text_document(title, ref_text, clean_paragraphs, company_name, cuit, bank_name, signer_name, signer_role), "txt"
+
 
 def generate_prorroga_sepaimpo_pdf(company_name, cuit, bank_name, op_number, amount_usd, bl_number, reason_text, signer_name, signer_role):
     ref = f"SEPAIMPO - Solicitud de Prorroga de Plazo de Demostracion de Ingreso Aduanero | Op. N° {op_number}"
@@ -99,6 +202,7 @@ def generate_prorroga_sepaimpo_pdf(company_name, cuit, bank_name, op_number, amo
     ]
     data, _ = build_pdf_document("PRORROGA SEPAIMPO", ref, paragraphs, company_name, cuit, bank_name, signer_name, signer_role)
     return data
+
 
 def generate_descargo_mermas_pdf(company_name, cuit, bank_name, pe_number, original_fob, amount_received, nc_number, survey_number, signer_name, signer_role):
     diff = original_fob - amount_received
@@ -113,6 +217,7 @@ def generate_descargo_mermas_pdf(company_name, cuit, bank_name, pe_number, origi
     data, _ = build_pdf_document("DESCARGO MERMAS SECOEXPO", ref, paragraphs, company_name, cuit, bank_name, signer_name, signer_role)
     return data
 
+
 def generate_zona_primaria_pdf(company_name, cuit, bank_name, pe_number, buyer_name, local_invoice, signer_name, signer_role):
     ref = f"SECOEXPO - Solicitud de Desafectacion por Venta en Zona Primaria Aduanera | PE N° {pe_number}"
     paragraphs = [
@@ -124,6 +229,7 @@ def generate_zona_primaria_pdf(company_name, cuit, bank_name, pe_number, buyer_n
     ]
     data, _ = build_pdf_document("VENTA ZONA PRIMARIA", ref, paragraphs, company_name, cuit, bank_name, signer_name, signer_role)
     return data
+
 
 def generate_imputacion_b02_pdf(company_name, cuit, bank_name, pe_number, b02_boleto, amount_usd, signer_name, signer_role):
     ref = f"SECOEXPO - Instruccion de Afectacion de Permiso de Embarque a Boleto de Anticipo B02 | PE N° {pe_number}"
@@ -137,12 +243,22 @@ def generate_imputacion_b02_pdf(company_name, cuit, bank_name, pe_number, b02_bo
     return data
 
 
-def generate_dictamen_tecnico_pdf(company_name, cuit, operation_type, diagnosis_data, signer_name="Consultor Responsable", signer_role="Asesor Normativo Comex", attached_files=None):
+def generate_dictamen_tecnico_pdf(
+    company_name,
+    cuit,
+    operation_type,
+    diagnosis_data,
+    signer_name="Consultor Responsable",
+    signer_role="Asesor Normativo Comex",
+    attached_files=None,
+    declared_documents=None
+):
     """
-    Genera el Dictamen Técnico de Encuadre Normativo y Viabilidad Cambiaria en PDF
-    para entregar al cliente o presentar ante la mesa de Comex del banco.
+    Genera el Dictamen Técnico Oficial de Encuadre Normativo y Viabilidad Cambiaria en formato PDF.
+    Contempla operaciones complejas y masivas con múltiples Permisos de Embarque, Facturas 'E',
+    Documentos de Transporte, Despachos SIM y Declaraciones SEDI.
     """
-    ref = f"DICTAMEN TÉCNICO DE ENCUADRE NORMATIVO Y FACTIBILIDAD CAMBIARIA ({operation_type.upper()})"
+    ref = f"DICTAMEN TECNICO DE ENCUADRE NORMATIVO Y FACTIBILIDAD CAMBIARIA ({operation_type.upper()})"
     
     monto_val = diagnosis_data.get("monto_usd", 0.0)
     concepto_txt = diagnosis_data.get("nombre_concepto", "N/A")
@@ -150,11 +266,47 @@ def generate_dictamen_tecnico_pdf(company_name, cuit, operation_type, diagnosis_
     semaforo = diagnosis_data.get("semaforo", {})
     estado_sem = f"{semaforo.get('color', '')} {semaforo.get('estado', '')}"
     
-    paragraphs = [
-        f"EMPRESA TITULAR: {company_name} | CUIT: {cuit}\nTIPO DE OPERACION EVALUADA: {operation_type.upper()} | MONTO: USD {monto_val:,.2f}",
-        f"1. ENCUADRE CAMBIARIO DICTAMINADO (BCRA):\nConcepto Oficial Aplicable: {concepto_txt}\n\nFundamentacion Normativa:\n{fundamento}",
-        f"2. EVALUACION DE VIABILIDAD Y CANDADOS REGULATORIOS:\nDictamen de Factibilidad: {estado_sem}"
-    ]
+    paragraphs = []
+    
+    # 0. Encabezado Operativo
+    paragraphs.append(
+        f"EMPRESA TITULAR: {company_name} | CUIT: {cuit}\n"
+        f"TIPO DE OPERACION EVALUADA: {operation_type.upper()} | MONTO TOTAL EVALUADO: USD {monto_val:,.2f}"
+    )
+    
+    # Detalle de Documentación Declarada en Operaciones Consolidadas/Masivas
+    if declared_documents:
+        txt_decl = "CONSOLIDACION OPERATIVA - DOCUMENTOS DECLARADOS:\n"
+        for cat_label, items in declared_documents.items():
+            if items:
+                if isinstance(items, list):
+                    items_str = ", ".join(str(it) for it in items)
+                    txt_decl += f"- {cat_label} ({len(items)} declarados): {items_str}\n"
+                else:
+                    txt_decl += f"- {cat_label}: {items}\n"
+        paragraphs.append(txt_decl)
+    
+    # 1. Encuadre Cambiario y Plazos
+    pinfo = diagnosis_data.get("plazo_info", {})
+    plazo_txt = ""
+    if pinfo:
+        f_lim = pinfo.get("fecha_limite")
+        f_lim_str = f_lim.strftime("%d/%m/%Y") if hasattr(f_lim, "strftime") else str(f_lim)
+        plazo_txt = f"\nPlazo Legal Exigible: {pinfo.get('dias', 0)} dias corridos | Fecha Limite Exigible: {f_lim_str}"
+    elif diagnosis_data.get("plazo_demostracion_dias", 0) > 0:
+        plazo_txt = f"\nPlazo de Demostracion Aduanera (SEPAIMPO): {diagnosis_data.get('plazo_demostracion_dias')} dias corridos"
+        
+    paragraphs.append(
+        f"1. ENCUADRE CAMBIARIO DICTAMINADO (BCRA):\n"
+        f"Concepto Oficial Aplicable: {concepto_txt}{plazo_txt}\n\n"
+        f"Fundamentacion Normativa (Com. 'A' 6808 / SECOEXPO / SEPAIMPO):\n{fundamento}"
+    )
+    
+    # 2. Evaluación de Viabilidad y Candados
+    paragraphs.append(
+        f"2. EVALUACION DE VIABILIDAD Y CANDADOS REGULATORIOS:\n"
+        f"Dictamen de Factibilidad: {estado_sem}"
+    )
     
     bloqueos = diagnosis_data.get("bloqueos", [])
     if bloqueos:
@@ -177,17 +329,41 @@ def generate_dictamen_tecnico_pdf(company_name, cuit, operation_type, diagnosis_
             txt_c += f"{idx}. {doc}\n"
         paragraphs.append(txt_c)
         
+    # 4. Estado del Legajo Digital y Comprobantes Adjuntados (Soporte Masivo)
     if attached_files and len(attached_files) > 0:
-        txt_att = "4. ESTADO DEL LEGAJO DIGITAL Y CONSTANCIAS ADJUNTADAS:\n"
+        txt_att = "4. ESTADO DEL LEGAJO DIGITAL Y COMPROBANTES ADJUNTADOS:\n"
         for idx, item in enumerate(attached_files, 1):
-            status_symbol = "[ADJUNTADO Y VERIFICADO]" if item.get("attached") else "[PENDIENTE]"
-            txt_att += f"{idx}. {item.get('name')}: {status_symbol} {item.get('filename', '')}\n"
+            cat = item.get("name", f"Documento {idx}")
+            is_att = item.get("attached", False)
+            count = item.get("count", 1 if is_att else 0)
+            exp = item.get("expected", 1)
+            fn = item.get("filename", "")
+            
+            if is_att:
+                status_str = f"[ADJUNTADO Y VERIFICADO: {count} archivo(s)]" if count > 1 else "[ADJUNTADO Y VERIFICADO]"
+                files_str = f" | Archivo(s): {fn}" if fn else ""
+                txt_att += f"{idx}. {cat}: {status_str}{files_str}\n"
+            else:
+                txt_att += f"{idx}. {cat}: [PENDIENTE DE CARGA]\n"
         paragraphs.append(txt_att)
         
     paragraphs.append(
-        "CONCLUSION:\nEl presente informe técnico constituye una orientación profesional basada en el Texto Ordenado de Exterior y Cambios del BCRA y resoluciones complementarias de ARCA a la fecha de emisión. Se recomienda archivar este dictamen junto al legajo de la operación para cualquier auditoría posterior."
+        "CONCLUSION:\n"
+        "El presente informe tecnico constituye un dictamen profesional emitido conforme a las normas "
+        "del Texto Ordenado de Exterior y Cambios del Banco Central de la Republica Argentina (Comunicacion 'A' 6808 "
+        "y complementarias) y disposiciones vigentes de ARCA a la fecha de emision. "
+        "Se instruye a la empresa archivar el presente dictamen junto al legajo integral de la operacion "
+        "como respaldo ante auditorias bancarias o requerimientos de la autoridad de control cambiario."
     )
     
-    data, _ = build_pdf_document("DICTAMEN TECNICO COMEX", ref, paragraphs, company_name, cuit, "MESA DE COMERCIO EXTERIOR / LEGAJO INTERNO", signer_name, signer_role)
+    data, _ = build_pdf_document(
+        "DICTAMEN TECNICO COMEX",
+        ref,
+        paragraphs,
+        company_name,
+        cuit,
+        "MESA DE COMERCIO EXTERIOR / LEGAJO BANCARIO",
+        signer_name,
+        signer_role
+    )
     return data
-
