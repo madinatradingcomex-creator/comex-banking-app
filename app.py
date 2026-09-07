@@ -301,7 +301,7 @@ if "Exportaciones" in operacion_seleccionada:
     st.markdown("""
     <div class="operation-banner">
         <div class="operation-title">🚢 Mesa de Exportaciones | Análisis Técnico & Auditoría Documental</div>
-        <div class="operation-desc">Encuadre legal de cobros (B01 vs B02), plazos de liquidación según NCM y verificación de legajo probatorio ante entidades bancarias.</div>
+        <div class="operation-desc">Encuadre legal de cobros (B01 vs B02), plazos de liquidación según NCM y régimen informativo SECOEXPO (Comunicación "A" 6808 BCRA).</div>
     </div>
     """, unsafe_allow_html=True)
     
@@ -499,7 +499,7 @@ if "Exportaciones" in operacion_seleccionada:
                 st.markdown(f"⏳ <span class='doc-pending'>{item['name']}:</span> Pendiente de carga", unsafe_allow_html=True)
                 
         # Fundamento Normativo
-        with st.expander("📖 **Fundamento Normativo BCRA & Obligaciones en SECOEXPO**", expanded=True):
+        with st.expander("📖 **Fundamento Normativo: Régimen Informativo SECOEXPO (Com. 'A' 6808 BCRA)**", expanded=True):
             st.write(diag_expo["fundamento_normativo"])
             
         # Botón de Descarga de Dictamen en PDF

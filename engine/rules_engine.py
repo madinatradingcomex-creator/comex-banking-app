@@ -297,10 +297,12 @@ def diagnose_export_operation(
             
         fundamento = (
             "Los fondos del comprador exterior ingresan al país con anterioridad al embarque de la mercadería. "
-            "Conforme el Texto Ordenado de Exterior y Cambios del BCRA, el único concepto aplicable es B02 (Anticipo de Exportación). "
-            "Esta operación genera una obligación formal en el sistema SECOEXPO: la empresa cuenta con un plazo máximo legal "
-            "para realizar el embarque y, una vez cumplido el Permiso de Embarque en Aduana, deberá presentar formalmente ante este banco "
-            "la Nota de Imputación del Permiso al Anticipo B02 para cancelar el saldo y evitar ser intimada bajo la Ley Penal Cambiaria."
+            "Conforme el Texto Ordenado de Exterior y Cambios y la Comunicación 'A' 6808 del BCRA (Régimen Informativo SECOEXPO), "
+            "el único concepto cambiario aplicable es B02 (Anticipo de Exportación). "
+            "Esta operación genera la apertura formal de una obligación en el sistema SECOEXPO a cargo de la entidad financiera nominada: "
+            "la empresa exportadora cuenta con un plazo máximo legal de hasta 365 días corridos para realizar el embarque y, "
+            "una vez cumplido el Permiso de Embarque en Aduana (SIM), deberá presentar formalmente ante este banco la Nota de Imputación "
+            "del Permiso al Boleto de Anticipo B02 para cancelar el saldo y evitar ser intimada bajo apercibimiento del Régimen Penal Cambiario (Ley 19.359)."
         )
         plazo_embarque_dias = 365
         fecha_limite = fecha_cumplido_o_ingreso + timedelta(days=plazo_embarque_dias)
@@ -313,10 +315,10 @@ def diagnose_export_operation(
         ]
         
         semaforo = {
-            "estado": "VIABLE CON COMPROMISO POSTERIOR SECOEXPO",
+            "estado": "VIABLE CON COMPROMISO POSTERIOR SECOEXPO (COM. A 6808)",
             "color": "🟢",
             "nivel": "NORMAL",
-            "resumen": "Operación liquidable bajo B02. Se activa seguimiento de plazo de embarque y posterior obligación de imputar el Permiso aduanero."
+            "resumen": "Operación liquidable bajo B02. Se activa seguimiento normativo en SECOEXPO (Com. 'A' 6808) para futuro embarque e imputación de Permiso aduanero."
         }
         
         plazo_info = {
@@ -332,17 +334,19 @@ def diagnose_export_operation(
         if concepto_propuesto == "B02":
             observaciones.append({
                 "origen": "Inconsistencia de Concepto",
-                "detalle": "Habiéndose ya cumplido el embarque en Aduana, no debe utilizarse B02 (Anticipo) sino B01 (Cobro). El concepto B01 imputará y cancelará el Permiso en SECOEXPO."
+                "detalle": "Habiéndose ya cumplido el embarque en Aduana, no debe utilizarse B02 (Anticipo) sino B01 (Cobro). El concepto B01 imputará y cancelará el Permiso en SECOEXPO conforme Com. 'A' 6808."
             })
             
         # Cálculo de plazos por NCM
         plazo_calc = calculate_expo_deadline(fecha_cumplido_o_ingreso, categoria_ncm_key, is_related)
         
         fundamento = (
-            f"Habiéndose cumplido el embarque de los bienes con registro aduanero formal, el ingreso de divisas debe "
-            f"liquidarse bajo el concepto B01. La liquidación imputará y cancelará el Permiso de Embarque en el sistema "
-            f"SECOEXPO de seguimiento bancario del BCRA. El plazo legal exigible según la posición arancelaria y condición "
-            f"es de {plazo_calc['plazo_dias_aplicado']} días corridos desde el cumplido aduanero."
+            f"Habiéndose cumplido el embarque de los bienes con registro aduanero formal en el SIM, el ingreso de divisas debe "
+            f"liquidarse bajo el concepto B01 conforme lo estipulado por la Comunicación 'A' 6808 y el Texto Ordenado de Exterior y Cambios del BCRA. "
+            f"La liquidación bancaria imputará y cancelará el Permiso de Embarque en el sistema de seguimiento SECOEXPO. "
+            f"El plazo legal exigible según la posición arancelaria NCM y la condición de venta es de {plazo_calc['plazo_dias_aplicado']} días "
+            f"corridos contados desde la fecha del cumplido aduanero. Su vencimiento sin liquidación obligará a la entidad nominada a intimar "
+            f"a la empresa y reportarla ante la Gerencia Principal de Control Cambiario del BCRA bajo el Régimen Penal Cambiario (Com. 'A' 6808)."
         )
         
         docs_necesarios = [
